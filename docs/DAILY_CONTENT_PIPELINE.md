@@ -23,3 +23,11 @@ The workflow uses a small curated idea bank and a history file within that run. 
 3. A video/image provider with suitable 9:16 duration, queue, and zero-cost quota.
 4. FFmpeg rendering, subtitle and thumbnail export, and technical QA.
 5. Separate official publishing adapters, each left disabled until account/API eligibility and approval are verified.
+
+## FFmpeg assembly utility
+`src/media_assembler.py` can take an already-generated, licensed source MP4 and:
+- crop/scale to 1080x1920;
+- overlay a subtle WonderVexa watermark near the lower-right safe area;
+- export H.264 MP4 and a PNG thumbnail frame.
+
+It requires FFmpeg installed and is not part of the scheduled draft-only workflow. It does not create source footage, add music, or publish. Run locally only after a video provider has produced an input clip and the user has reviewed the intended output.

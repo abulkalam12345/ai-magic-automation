@@ -1,7 +1,14 @@
 # AI Magic Video Automation — Project Plan
 
 ## Goal
-Create original vertical 9:16 short videos with one consistent fictional adult woman character, magical transformations, and educational storytelling. Prepare one approved master video and platform-specific variants for YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Keep generation and publishing user-controlled until tested.
+Create original vertical 9:16 short videos with one consistent fictional adult woman character, magical transformations, and educational storytelling. Prepare platform-ready versions for YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Keep generation and publishing user-controlled until tested.
+
+## Publishing cadence and watermark plan
+- Target cadence: **2 Re  els per rolling 24 hours** — one in the morning and one in the evening (Nepal time, Asia/Kathmandu).
+- Destinations: YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Prepare a suitable version for each platform; do not assume one upload or one API automatically covers all four.
+- Add a consistent, subtle **“AI Magic”** brand watermark to the video itself, preferably in a lower corner within safe margins. Keep it legible but unobtrusive, and never cover faces, important action, subtitles, or platform UI safe areas.
+- Keep a clean master export as well as watermarked platform exports where practical.
+- This is a target publishing plan, not an active scheduler. Every individual video still requires the user's explicit approval before publishing to any selected platform. Do not publish twice just to satisfy the cadence if a video is not ready or approved.
 
 ## Constraints
 - Zero paid services, no credit card, Android-only project management.
@@ -15,7 +22,7 @@ Create original vertical 9:16 short videos with one consistent fictional adult w
 1. **Repository foundation:** document architecture, safety, configuration, and automated validation.
 2. **Provider feasibility:** verify a genuinely free image/video inference route and its current quota, queue, license, and account requirements.
 3. **Quality proof:** generate one 8–12 second 9:16 test (a wilted flower restored by magic), then inspect character consistency, motion, hands, transformation continuity, audio, render time, and actual cost.
-4. **Video pipeline:** only after a passing proof, implement generation, FFmpeg assembly, subtitles, metadata, and technical/visual quality gates.
+4. **Video pipeline:** only after a passing proof, implement generation, FFmpeg assembly, subtitles, watermarking, metadata, and technical/visual quality gates.
 5. **Platform preparation:** define separate official publishing adapters and validation for YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Keep every adapter disabled until its official API access, account eligibility, scopes, review status, and zero-cost operation are verified.
 6. **Approval and publishing:** show the finished video and platform-specific captions to the user. Require a fresh explicit approval for each video before any upload. Publish only to the platforms selected in that approval and report each result independently.
 
@@ -25,13 +32,14 @@ Create original vertical 9:16 short videos with one consistent fictional adult w
 - Coherent flower-restoration transformation.
 - No severe face, hand, prop, or motion defects.
 - No unlicensed music or copied story assets.
+- A visible but unobtrusive “AI Magic” watermark, correctly placed inside vertical safe margins.
 - Record runtime, queue time, quota consumed, and cost (must be zero).
 
 ## Proposed architecture (subject to provider test)
 - Android: user reviews generated videos and gives per-video approval.
 - GitHub: source control, tests, and manually triggered orchestration only; do not assume hosted runners have a GPU.
 - Inference provider: optional free hosted GPU/API, selected only after verifying current free quota and terms.
-- Media assembly: FFmpeg for vertical crop/scale, audio mix, subtitles, and MP4 export.
+- Media assembly: FFmpeg for vertical crop/scale, audio mix, subtitles, watermark, and MP4 export.
 - Quality gate: technical checks plus human review; automated checks cannot guarantee visual quality.
 - Publishing: separate official API/OAuth adapter per platform; no browser automation or credential scraping. One approval record per video, with selected destinations recorded before upload.
 
@@ -43,4 +51,4 @@ Create original vertical 9:16 short videos with one consistent fictional adult w
 - Platform upload support and media requirements can change; verify each adapter against current official documentation before implementation.
 
 ## Status
-Repository inspected on 2026-10-11. The blueprint and safety preflight are in place on a feature branch. No video-generation provider has yet been proven. No video has been generated or uploaded. All four publishing destinations are configured disabled by default.
+Repository blueprint and safety preflight are in place on a feature branch. No video-generation provider has yet been proven. No video has been generated or uploaded. All four publishing destinations remain disabled by default.

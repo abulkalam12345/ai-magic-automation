@@ -113,7 +113,7 @@ def generate(signals_path: Path, output_dir: Path, day: date, slot: str) -> Path
     destination = output_dir / metadata["id"]
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "story.md").write_text(script, encoding="utf-8")
-    (destination / "metadata.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    (destination / "metadata.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return destination
 
 

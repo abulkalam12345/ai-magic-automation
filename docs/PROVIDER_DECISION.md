@@ -70,3 +70,21 @@ An open-source notebook (for example, CogVideoX's published Colab notebooks) is 
 3. Before any generation call, record the expected GPU reservation and verify it is within the remaining free quota; never allow paid fallback or billing.
 4. If no candidate passes, tell the user honestly that a dependable automated zero-cost video-generation backend is not currently verified. Do not claim daily video generation is ready.
 
+
+## Exact Space API/runtime candidate check (2026-10-11)
+
+### OpenKing/wan2-video-generation — rejected for the WonderVexa proof
+
+The currently indexed Space deployment guide describes a Gradio Space using Wan2.2-TI2V-5B, with an example 73-frame output at 24 fps (about 3 seconds), landscape 1280x704 defaults, and a GPU reservation of 180 seconds. The same guide says Free-tier GPU duration is typically limited to 60 seconds and that the 2–3 minute generation profile is optimized for Pro. This is incompatible with a safe assumption of Free-tier completion and does not meet the 8–12 second vertical target. The Space's Running label and Gradio interface do not prove successful free-tier inference. No API call was made.
+
+Sources:
+- Space deployment guide: https://huggingface.co/spaces/OpenKing/wan2-video-generation/blob/main/DEPLOYMENT.md
+- Space source/status snapshot: https://huggingface.co/spaces/OpenKing/wan2-video-generation
+
+### Other candidates
+
+- Fhwang/wan2-video-generation is a community deployment based on the same template and explicitly documents Free GPU duration as 60 seconds, 3-second default clips, and timeouts for longer outputs. It is not a better candidate for our 8–12 second proof: https://huggingface.co/spaces/Fhwang/wan2-video-generation
+- IdlecloudX/wan-i2v-1 documents an asynchronous job API, but requires a configured JOB_API_KEY and does not establish free anonymous generation, zero-cost usage, or the needed text-to-video pipeline. It is not approved: https://huggingface.co/spaces/IdlecloudX/wan-i2v-1
+- A separate Wan2.2 Remix Space declares its fine-tune license as `other` without providing terms; output rights are unresolved, so it is excluded from commercial use: https://huggingface.co/spaces/mastaP/wan22-remix-sfw-t2v
+
+**Result:** No candidate passed the project's full free-tier, license, API, duration, vertical-output, and operational checks. Keep provider integration disabled. No GPU quota was consumed and no credentials were requested.

@@ -8,6 +8,8 @@ SPEC = importlib.util.spec_from_file_location("media_assembler", MODULE)
 media_assembler = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(media_assembler)
 
+VALID_SRT = "1\\n00:00:00,000 --> 00:00:02,000\\nHello world\\n"
+
 
 class MediaAssemblerTests(unittest.TestCase):
     def test_command_has_vertical_format_and_watermark(self):
@@ -23,12 +25,12 @@ class MediaAssemblerTests(unittest.TestCase):
             self.assertIn("thumb.png", joined)
             self.assertNotIn("subtitles=", joined)
 
-    def test_optional_srt_is_burned_into_video_and_thumbnail(self):
+    def test_optional_valid_srt_is_burned_into_video_and_thumbnail(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             source, captions = root / "input.mp4", root / "captions.srt"
             source.write_bytes(b"placeholder")
-            captions.write_text("caption sample", encoding="utf-8")
+            captions.write_text(VALID_SRT, encoding="utf-8")
             command = media_assembler.build_ffmpeg_command(
                 source, root / "out.mp4", root / "thumb.png", captions=captions
             )
@@ -44,7 +46,7 @@ class MediaAssemblerTests(unittest.TestCase):
             for source in sources:
                 source.write_bytes(b"placeholder")
             captions = root / "captions.srt"
-            captions.write_text("caption sample", encoding="utf-8")
+            captions.write_text(VALID_SRT, encoding="utf-8")
             command = media_assembler.build_sequence_ffmpeg_command(
                 sources, root / "out.mp4", captions=captions
             )
@@ -69,6 +71,45 @@ class MediaAssemblerTests(unittest.TestCase):
                 media_assembler.build_ffmpeg_command(
                     source, root / "out.mp4", root / "thumb.png", captions=empty
                 )
+
+    def test_invalid_srt_timestamp_or_cue_text_rejected(self):
+        invalid_examples = [
+            "1\\nnot-a-time --> 00:00:02,000\\nHello",
+            "1\\n00:00:02,000 --> 00:00:01,000\\nHello",
+            "1\\n00:00:00,000 --> 00:00:02,000\\n   ",
+            "1\\n00:00:00,000 --> 00:00:02,000\\nHello\\n\\n3\\n00:00:03,000 --> 00:00:04,000\\nWorld",
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for number, content in enumerate(invalid_examples):
+                captions = root / f"bad-{number}.srt"
+                captions.write_text(content, encoding="utf-8")
+                with self.subTest(content=content), self.assertRaises(ValueError):
+                    media_assembler._validate_captions(captions)
+
+    def test_valid_multiple_srt_cues_are_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            captions = Path(tmp) / "valid.srt"
+            captions.write_text(
+                "1\\n00:00:00,000 --> 00:00:01,000\\nFirst line\\n\\n"
+                "2\\n00:00:01,200 --> 00:00:02,000\\nSecond line\\n",
+                encoding="utf-8",
+            )
+            media_assembler._validate_captions(captions)
+
+    def test_overlapping_or_out_of_order_srt_cues_rejected(self):
+        samples = [
+            "1\\n00:00:00,000 --> 00:00:02,000\\nFirst\\n\\n"
+            "2\\n00:00:01,500 --> 00:00:03,000\\nSecond",
+            "2\\n00:00:00,000 --> 00:00:01,000\\nFirst",
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for number, content in enumerate(samples):
+                captions = root / f"bad-order-{number}.srt"
+                captions.write_text(content, encoding="utf-8")
+                with self.subTest(number=number), self.assertRaises(ValueError):
+                    media_assembler._validate_captions(captions)
 
     def test_sequence_requires_multiple_sources(self):
         with tempfile.TemporaryDirectory() as tmp:

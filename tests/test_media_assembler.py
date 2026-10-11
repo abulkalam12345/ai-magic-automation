@@ -34,6 +34,8 @@ class MediaAssemblerTests(unittest.TestCase):
             joined = " ".join(command)
             self.assertEqual(command.count("-i"), 2)
             self.assertIn("concat=n=2:v=1:a=0", joined)
+            self.assertIn("fps=30", joined)
+            self.assertIn("format=yuv420p", joined)
             self.assertIn("scale=1080:1920", joined)
             self.assertIn("WonderVexa", joined)
             self.assertIn("-t 10", joined)

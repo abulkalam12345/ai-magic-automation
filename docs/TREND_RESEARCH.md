@@ -11,6 +11,7 @@ It drops entries with missing/unparseable dates, entries older than the configur
 `src/story_generator.py` converts a reviewed signal JSON file into an original fictional story brief. It:
 - accepts only the research-only status emitted by the trend adapter;
 - requires a non-empty headline, summary, source name and absolute HTTP(S) source/article URLs;
+- escapes untrusted feed text before placing it in Markdown, bounds input lengths, and rejects non-finite ranking scores;
 - rejects unsafe URLs and any signal label other than `fresh_research_signal_not_verified_platform_trend`;
 - selects the highest-ranked signal and preserves source attribution in the generated brief and metadata;
 - creates a 10-second story structure and visual-generation prompt without copying article wording or making factual claims;

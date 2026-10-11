@@ -1,5 +1,10 @@
 import importlib.util
+import json
+import sys
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 from datetime import datetime, timezone
 
 MODULE = __import__("pathlib").Path(__file__).parents[1] / "src" / "trend_research.py"
@@ -74,6 +79,22 @@ class TrendResearchTests(unittest.TestCase):
         self.assertEqual(len(ranked), 2)
         self.assertEqual(ranked[0]["independent_source_count"], 2)
         self.assertEqual(ranked[0]["signal_label"], "fresh_research_signal_not_verified_platform_trend")
+
+    def test_cli_writes_parseable_json_file(self):
+        now = datetime.now(timezone.utc)
+        record = {"title": "Current signal", "url": "https://example.org/story",
+                  "published_at": now.isoformat(), "source_name": "Example",
+                  "source_url": "https://example.org/feed", "summary": "Summary",
+                  "fetched_at": now.isoformat()}
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "signals.json"
+            with patch.object(sys, "argv", ["trend_research.py", "--feed",
+                                            "Example=https://example.org/feed",
+                                            "--output", str(output)]), \\
+                 patch.object(trend, "fetch_feed", return_value=[record]):
+                self.assertEqual(trend.main(), 0)
+            payload = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(payload["items"][0]["title"], "Current signal")
 
     def test_rejects_invalid_timestamp_as_not_fresh(self):
         now = datetime(2026, 10, 11, 12, tzinfo=timezone.utc)

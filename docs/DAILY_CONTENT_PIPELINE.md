@@ -8,6 +8,8 @@ Twice per day (06:15 and 18:15 Asia/Kathmandu), GitHub Actions runs the offline 
 - a generated SVG thumbnail draft;
 - JSON metadata marking the package as draft-only.
 
+Before artifact upload, `src/draft_package_check.py` checks that each package has its required files, parseable metadata and SVG, matching topic/script, valid hashtags, an explicit evergreen/unverified trend label, no claimed rendered video, and publishing disabled with per-video approval required. This is an integrity and safety gate, not a visual review.
+
 The workflow uses a small curated idea bank and attempts to restore/save a cross-run topic-history cache using GitHub Actions cache. Cache retention and eviction are controlled by GitHub, so this is best-effort duplicate avoidance, not a permanent ledger or a guarantee of uniqueness. It does not have live trend research, an AI language model, image/video generation, or FFmpeg rendering. Suggestions are explicitly labeled as unverified evergreen seeds, never live trends.
 
 ## Safety and cost
@@ -15,6 +17,7 @@ The workflow uses a small curated idea bank and attempts to restore/save a cross
 - No payment method, secret, or credential is needed.
 - No video is rendered or uploaded.
 - Publishing remains disabled and every final video requires explicit user approval.
+- GitHub Actions workflow uses read-only contents permission and checkout does not persist its token credentials.
 - GitHub scheduled workflows are best-effort; GitHub may delay or skip scheduled runs, and public-repository schedules can be disabled after inactivity.
 
 ## Next integrations (blocked until verified)
@@ -30,12 +33,18 @@ The workflow uses a small curated idea bank and attempts to restore/save a cross
 - overlay a subtle WonderVexa watermark near the lower-right safe area;
 - export H.264 MP4 and a PNG thumbnail frame.
 
-It requires FFmpeg installed and is not part of the scheduled draft-only workflow. It does not create source footage, add music, or publish. Run locally only after a video provider has produced an input clip and the user has reviewed the intended output.
+It requires FFmpeg installed locally and is not part of the scheduled draft-only workflow. It does not create source footage, add music, or publish. Run locally only after a video provider has produced an input clip and the user has reviewed the intended output.
 
 ## Finished-video technical quality gate
-
 `src/media_quality_check.py` uses `ffprobe` to check a rendered MP4 and PNG thumbnail before human review. It verifies an H.264 video stream, exact 1080x1920 dimensions, yuv420p pixel format, an 8–60 second duration, non-empty files, and the PNG file signature. It does not judge visual quality, rights, story consistency, audio quality, or platform policy; those still need human review. Run it with:
 
 ```bash
 python src/media_quality_check.py --video output/final.mp4 --thumbnail output/thumbnail.png
+```
+
+## Draft package integrity check
+The scheduled workflow runs this automatically for every generated package. To check one locally:
+
+```bash
+python src/draft_package_check.py output/drafts/2026-10-13-morning-moonlit-seed
 ```

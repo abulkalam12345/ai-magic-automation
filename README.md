@@ -23,6 +23,7 @@ A local ffprobe-based gate checks final MP4 technical properties and PNG thumbna
 
 ## Documentation
 - [Daily content pipeline](docs/DAILY_CONTENT_PIPELINE.md)
+- [Subtitle workflow and review](docs/SUBTITLE_WORKFLOW.md)
 - [Trend research adapter](docs/TREND_RESEARCH.md)
 - [Video provider evidence gate](docs/VIDEO_PROVIDER_GATE.md)
 - [Chinese AI video tools assessment](docs/CHINESE_VIDEO_TOOLS_ASSESSMENT.md)

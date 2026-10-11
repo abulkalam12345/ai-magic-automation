@@ -28,7 +28,7 @@ class MediaAssemblerTests(unittest.TestCase):
             root = Path(tmp)
             source, captions = root / "input.mp4", root / "captions.srt"
             source.write_bytes(b"placeholder")
-            captions.write_text("1\\n00:00:00,000 --> 00:00:02,000\\nHello world\\n", encoding="utf-8")
+            captions.write_text("caption sample", encoding="utf-8")
             command = media_assembler.build_ffmpeg_command(
                 source, root / "out.mp4", root / "thumb.png", captions=captions
             )
@@ -44,7 +44,7 @@ class MediaAssemblerTests(unittest.TestCase):
             for source in sources:
                 source.write_bytes(b"placeholder")
             captions = root / "captions.srt"
-            captions.write_text("1\\n00:00:00,000 --> 00:00:01,000\\nHello\\n", encoding="utf-8")
+            captions.write_text("caption sample", encoding="utf-8")
             command = media_assembler.build_sequence_ffmpeg_command(
                 sources, root / "out.mp4", captions=captions
             )
@@ -53,15 +53,15 @@ class MediaAssemblerTests(unittest.TestCase):
             self.assertIn("subtitles=filename='captions.srt'", graph)
             self.assertLess(graph.index("subtitles="), graph.index("drawtext="))
 
-    def test_empty_and_missing_captions_rejected(self):
+    def test_missing_and_empty_captions_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             source = root / "input.mp4"
             source.write_bytes(b"placeholder")
-            with self.assertRaisesRegex(ValueError, "empty"):
+            with self.assertRaises(FileNotFoundError):
                 media_assembler.build_ffmpeg_command(
                     source, root / "out.mp4", root / "thumb.png",
-                    captions=root / "empty.srt",
+                    captions=root / "missing.srt",
                 )
             empty = root / "empty.srt"
             empty.write_text("  ", encoding="utf-8")

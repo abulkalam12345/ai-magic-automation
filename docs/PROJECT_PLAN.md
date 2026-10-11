@@ -1,54 +1,44 @@
-# AI Magic Video Automation — Project Plan
+# WonderVexa Video Automation — Project Plan
+
+## Channel identity
+- Channel name: **WonderVexa**.
+- Logo reference: user-provided blue magical energy-ring image.
+- Video watermark: subtle **“WonderVexa”**, lower-right safe area.
 
 ## Goal
-Create original vertical 9:16 short videos with one consistent fictional adult woman character, magical transformations, and educational storytelling. Prepare platform-ready versions for YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Keep generation and publishing user-controlled until tested.
+Build an Android-friendly, zero-budget-first pipeline for original vertical 9:16 magical transformation and educational Shorts. Prepare two daily content drafts (morning and evening, Asia/Kathmandu), including scripts, storyboards, SEO metadata and thumbnail artwork. Video rendering and publishing remain gated on verified free providers and human approval.
 
-## Publishing cadence and watermark plan
-- Target cadence: **2 Re  els per rolling 24 hours** — one in the morning and one in the evening (Nepal time, Asia/Kathmandu).
-- Destinations: YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Prepare a suitable version for each platform; do not assume one upload or one API automatically covers all four.
-- Add a consistent, subtle **“AI Magic”** brand watermark to the video itself, preferably in a lower corner within safe margins. Keep it legible but unobtrusive, and never cover faces, important action, subtitles, or platform UI safe areas.
-- Keep a clean master export as well as watermarked platform exports where practical.
-- This is a target publishing plan, not an active scheduler. Every individual video still requires the user's explicit approval before publishing to any selected platform. Do not publish twice just to satisfy the cadence if a video is not ready or approved.
+## Daily content workflow
+- Scheduled GitHub Actions runs at 06:15 and 18:15 Nepal time to create draft packages.
+- Each package includes an original short script, shot list, suggested title, description, long-tail keyword phrases, hashtags, metadata JSON and SVG thumbnail.
+- Current draft generator uses an offline curated idea bank. It is not live trend research and does not use a generative AI model. Trend-aware selection and durable duplicate history are future integrations.
+- Workflow output is saved as a downloadable GitHub Actions artifact; scheduled runs are best-effort and may be delayed or skipped.
+- Never claim a topic is trending unless a reliable trend source has actually verified it.
 
-## Constraints
-- Zero paid services, no credit card, Android-only project management.
-- Nepal News automation is out of scope and must never be changed.
-- Never store API keys, OAuth tokens, passwords, or personal credentials in Git.
-- Never publish to any platform without the user's explicit approval for that individual video.
-- No promise of unlimited or daily cinematic generation on free tiers.
-- Use official platform APIs and follow each platform's account eligibility, app review, media, and disclosure rules. If a platform requires unavailable approval or paid capability, leave that connector disabled.
+## Publishing and safety
+- Intended destinations: YouTube Shorts, Facebook Reels, TikTok, Instagram Reels.
+- Every final video requires explicit user approval and a destination selection before upload.
+- Automatic publishing is disabled. No upload happens from the daily draft workflow.
+- Keep a clean master export and separate watermarked copies where practical.
+- No paid service, credit card, paid fallback, or hidden billing.
 
 ## Staged delivery
-1. **Repository foundation:** document architecture, safety, configuration, and automated validation.
-2. **Provider feasibility:** verify a genuinely free image/video inference route and its current quota, queue, license, and account requirements.
-3. **Quality proof:** generate one 8–12 second 9:16 test (a wilted flower restored by magic), then inspect character consistency, motion, hands, transformation continuity, audio, render time, and actual cost.
-4. **Video pipeline:** only after a passing proof, implement generation, FFmpeg assembly, subtitles, watermarking, metadata, and technical/visual quality gates.
-5. **Platform preparation:** define separate official publishing adapters and validation for YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels. Keep every adapter disabled until its official API access, account eligibility, scopes, review status, and zero-cost operation are verified.
-6. **Approval and publishing:** show the finished video and platform-specific captions to the user. Require a fresh explicit approval for each video before any upload. Publish only to the platforms selected in that approval and report each result independently.
+1. Repository foundation, safe configuration and validation.
+2. Daily offline content-draft generation (implemented; needs CI verification).
+3. Live trend research and AI script generation, only after a suitable zero-cost source/model is verified.
+4. Video/image provider feasibility: verify license, runtime, 9:16 support, quota, queue and actual zero cost.
+5. FFmpeg rendering, subtitle composition, thumbnail export, WonderVexa watermark and technical QA.
+6. Human review, then separate official publishing adapters with per-video approval.
 
-## First proof acceptance criteria
-- Complete playable MP4, 1080x1920 preferred (lower resolution acceptable for feasibility proof).
-- One clearly adult fictional woman, visually consistent across shots.
-- Coherent flower-restoration transformation.
-- No severe face, hand, prop, or motion defects.
-- No unlicensed music or copied story assets.
-- A visible but unobtrusive “AI Magic” watermark, correctly placed inside vertical safe margins.
-- Record runtime, queue time, quota consumed, and cost (must be zero).
-
-## Proposed architecture (subject to provider test)
-- Android: user reviews generated videos and gives per-video approval.
-- GitHub: source control, tests, and manually triggered orchestration only; do not assume hosted runners have a GPU.
-- Inference provider: optional free hosted GPU/API, selected only after verifying current free quota and terms.
-- Media assembly: FFmpeg for vertical crop/scale, audio mix, subtitles, watermark, and MP4 export.
-- Quality gate: technical checks plus human review; automated checks cannot guarantee visual quality.
-- Publishing: separate official API/OAuth adapter per platform; no browser automation or credential scraping. One approval record per video, with selected destinations recorded before upload.
+## First video proof
+A 8–12 second vertical flower-restoration magic visual. Check character continuity, hands, motion, transformation, framing, watermark, render time, quota and actual cost before further automation.
 
 ## Known blockers
-- Free GPU availability and quotas can change and may require an account or queue.
-- A free model does not imply free compute.
-- Stable character identity across generated clips is not guaranteed; the proof must measure it.
-- YouTube, Meta, and TikTok publishing access can require account eligibility, app review, permissions, or manual setup. These are not assumed available.
-- Platform upload support and media requirements can change; verify each adapter against current official documentation before implementation.
+- The daily draft factory is template-based, not AI-generated.
+- It does not currently fetch live trends or persist topic history between scheduled workflow runs.
+- No video-generation provider has been validated; no video rendering or upload is implemented.
+- Platform API eligibility and review requirements are not assumed.
+- A viral result cannot be guaranteed.
 
-## Status
-Repository blueprint and safety preflight are in place on a feature branch. No video-generation provider has yet been proven. No video has been generated or uploaded. All four publishing destinations remain disabled by default.
+## Current status
+Daily draft package code and scheduled workflow have been added to the feature branch. Verify CI before relying on it. No video has been generated or published. All publishing destinations remain disabled.

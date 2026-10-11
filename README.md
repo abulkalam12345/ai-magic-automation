@@ -15,6 +15,10 @@ A twice-daily **draft package** workflow has been added. It creates scripts, sho
 ## Daily drafts
 GitHub Actions is scheduled for 06:15 and 18:15 Nepal time. Draft packages are saved as workflow artifacts for 14 days. Scheduled Actions are best-effort and may be delayed or skipped. The current generator uses a small offline idea bank, not live trend data or an AI text model.
 
+## Media quality check
+
+A local ffprobe-based gate checks final MP4 technical properties and PNG thumbnail integrity before human review. It does not generate footage or publish.
+
 ## Documentation
 - [Daily content pipeline](docs/DAILY_CONTENT_PIPELINE.md)
 - [Project plan](docs/PROJECT_PLAN.md)

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import urllib.parse
 from datetime import date
@@ -16,32 +17,52 @@ from pathlib import Path
 def _safe_http_url(value: object) -> bool:
     if not isinstance(value, str):
         return False
-    parsed = urllib.parse.urlparse(value.strip())
-    return parsed.scheme in {"http", "https"} and bool(parsed.hostname) and not parsed.username and not parsed.password
+    try:
+        parsed = urllib.parse.urlparse(value.strip())
+        return parsed.scheme in {"http", "https"} and bool(parsed.hostname) and not parsed.username and not parsed.password
+    except ValueError:
+        return False
 
 
-def _required_text(item: dict, field: str) -> str:
+def _required_text(item: dict, field: str, limit: int = 2000) -> str:
     value = item.get(field)
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"Signal field '{field}' must be a non-empty string.")
-    return value.strip()
+    value = value.strip()
+    if len(value) > limit:
+        raise ValueError(f"Signal field '{field}' exceeds {limit} characters.")
+    return value
+
+
+def _markdown_text(value: str) -> str:
+    """Render untrusted feed text as plain Markdown text, not active markup."""
+    value = re.sub(r"\s+", " ", value).strip()
+    value = re.sub(r"([\\`*_{}\[\]()#+.!|>~-])", r"\\\1", value)
+    return value
 
 
 def validate_signal(item: object) -> dict:
     if not isinstance(item, dict):
         raise ValueError("Each research signal must be a JSON object.")
-    title = _required_text(item, "title")
-    summary = _required_text(item, "summary")
-    source_name = _required_text(item, "source_name")
-    source_url = _required_text(item, "source_url")
-    article_url = _required_text(item, "url")
+    title = _required_text(item, "title", 240)
+    summary = _required_text(item, "summary", 2000)
+    source_name = _required_text(item, "source_name", 160)
+    source_url = _required_text(item, "source_url", 2048)
+    article_url = _required_text(item, "url", 2048)
     if not _safe_http_url(source_url) or not _safe_http_url(article_url):
         raise ValueError("Signal source_url and url must be absolute HTTP(S) URLs without credentials.")
-    label = _required_text(item, "signal_label")
+    label = _required_text(item, "signal_label", 100)
     if label != "fresh_research_signal_not_verified_platform_trend":
         raise ValueError("Only explicitly labeled, unverified research signals are accepted.")
+    score = item.get("research_signal_score", 0)
+    if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
+        raise ValueError("research_signal_score must be a finite number.")
+    published_at = item.get("published_at")
+    if published_at is not None and not isinstance(published_at, str):
+        raise ValueError("published_at must be a string or null.")
     return {**item, "title": title, "summary": summary, "source_name": source_name,
-            "source_url": source_url, "url": article_url, "signal_label": label}
+            "source_url": source_url, "url": article_url, "signal_label": label,
+            "research_signal_score": score}
 
 
 def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
@@ -51,7 +72,9 @@ def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
     topic = signal["title"]
     slug = re.sub(r"[^a-z0-9]+", "-", topic.lower()).strip("-")[:48] or "research-story"
     story_id = f"{day.isoformat()}-{slot}-research-{slug}"
-    summary = signal["summary"][:420]
+    safe_topic = _markdown_text(topic)
+    summary = _markdown_text(signal["summary"][:420])
+    source_name = _markdown_text(signal["source_name"])
     script = f"""# WonderVexa Original Story Brief
 
 **ID:** {story_id}  
@@ -60,9 +83,9 @@ def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
 **Research status:** Signal only; not a verified social-platform trend
 
 ## Research input (for inspiration, not as a factual script)
-- **Signal headline:** {topic}
+- **Signal headline:** {safe_topic}
 - **Feed summary:** {summary}
-- **Source:** {signal["source_name"]}
+- **Source:** {source_name}
 - **Source feed:** {signal["source_url"]}
 - **Article:** {signal["url"]}
 
@@ -91,6 +114,7 @@ Original fictional fantasy visual, vertical 9:16, cinematic close-up, coherent c
         "signal_label": signal["signal_label"],
         "source_name": signal["source_name"], "source_url": signal["source_url"],
         "article_url": signal["url"], "published_at": signal.get("published_at"),
+        "research_signal_score": signal["research_signal_score"],
         "publishing": {"enabled": False, "requires_explicit_video_approval": True},
     }
     return script, metadata
@@ -108,7 +132,7 @@ def generate(signals_path: Path, output_dir: Path, day: date, slot: str) -> Path
     candidates = [validate_signal(item) for item in payload["items"]]
     if not candidates:
         raise ValueError("No research signals are available.")
-    candidates.sort(key=lambda item: float(item.get("research_signal_score", 0)), reverse=True)
+    candidates.sort(key=lambda item: item["research_signal_score"], reverse=True)
     script, metadata = build_story_brief(candidates[0], day, slot)
     destination = output_dir / metadata["id"]
     destination.mkdir(parents=True, exist_ok=True)

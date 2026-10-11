@@ -1,0 +1,52 @@
+name: WonderVexa daily draft packages
+
+on:
+  schedule:
+    # 06:15 and 18:15 Nepal time (UTC+5:45)
+    - cron: "30 0 * * *"
+    - cron: "30 12 * * *"
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: Draft slot
+        required: true
+        type: choice
+        options:
+          - morning
+          - evening
+
+permissions:
+  contents: read
+
+jobs:
+  create-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Determine slot
+        id: slot
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_SLOT: ${{ inputs.slot }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "value=$INPUT_SLOT" >> "$GITHUB_OUTPUT"
+          elif [ "$SCHEDULE" = "30 0 * * *" ]; then
+            echo "value=morning" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=evening" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build script, SEO metadata and thumbnail draft
+        run: |
+          python src/content_factory.py --slot "${{ steps.slot.outputs.value }}" --date "$(date -u +%F)"
+      - name: Save draft package
+        uses: actions/upload-artifact@v4
+        with:
+          name: wondervexa-${{ steps.slot.outputs.value }}-${{ github.run_id }}
+          path: output/drafts/
+          if-no-files-found: error
+          retention-days: 14

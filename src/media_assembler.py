@@ -1,21 +1,31 @@
 """Assemble WonderVexa shorts from already-generated, licensed source footage.
 
-Requires FFmpeg installed locally. This module never generates footage, downloads
-assets, contacts a provider, or publishes. Source media must be owned/licensed.
+Requires FFmpeg with the subtitles/libass filter when --captions is supplied.
+This module never generates footage, downloads assets, contacts a provider, or
+publishes. Source media and caption text must be owned/licensed and reviewed.
 """
 from __future__ import annotations
 
 import argparse
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 
-def _video_filter(include_watermark: bool = True) -> str:
+_CAPTION_FILTER = (
+    "subtitles=filename='captions.srt':"
+    "force_style='FontName=Arial,FontSize=22,Alignment=2,MarginV=260,Outline=2,Shadow=1'"
+)
+
+
+def _video_filter(include_watermark: bool = True, include_captions: bool = False) -> str:
     filters = [
         "scale=1080:1920:force_original_aspect_ratio=increase",
         "crop=1080:1920",
     ]
+    if include_captions:
+        filters.append(_CAPTION_FILTER)
     if include_watermark:
         filters.append(
             "drawtext=text='WonderVexa':fontcolor=white@0.82:fontsize=34:"
@@ -25,24 +35,38 @@ def _video_filter(include_watermark: bool = True) -> str:
     return ",".join(filters)
 
 
-def build_ffmpeg_command(source: Path, output: Path, thumbnail: Path, ffmpeg: str = "ffmpeg") -> list[str]:
+def _validate_captions(captions: Path | None) -> None:
+    if captions is not None:
+        if not captions.is_file():
+            raise FileNotFoundError(f"Caption file not found: {captions}")
+        if not captions.read_text(encoding="utf-8-sig").strip():
+            raise ValueError("Caption file is empty")
+
+
+def build_ffmpeg_command(
+    source: Path, output: Path, thumbnail: Path, ffmpeg: str = "ffmpeg",
+    captions: Path | None = None,
+) -> list[str]:
     if not source.is_file():
         raise FileNotFoundError(f"Source video not found: {source}")
+    _validate_captions(captions)
     output.parent.mkdir(parents=True, exist_ok=True)
     thumbnail.parent.mkdir(parents=True, exist_ok=True)
     return [
         ffmpeg, "-y", "-i", str(source),
-        "-vf", _video_filter(), "-t", "60",
+        "-vf", _video_filter(include_captions=captions is not None), "-t", "60",
         "-c:v", "libx264", "-preset", "medium", "-crf", "23",
         "-pix_fmt", "yuv420p", "-movflags", "+faststart",
         "-an", str(output),
         "-ss", "1", "-i", str(source), "-frames:v", "1",
-        "-vf", _video_filter(include_watermark=False), str(thumbnail),
+        "-vf", _video_filter(include_watermark=False, include_captions=captions is not None),
+        str(thumbnail),
     ]
 
 
 def build_sequence_ffmpeg_command(
-    sources: list[Path], output: Path, target_duration: int = 10, ffmpeg: str = "ffmpeg"
+    sources: list[Path], output: Path, target_duration: int = 10, ffmpeg: str = "ffmpeg",
+    captions: Path | None = None,
 ) -> list[str]:
     """Concatenate 2+ silent clips into an 8–12 second vertical short."""
     if len(sources) < 2:
@@ -52,6 +76,7 @@ def build_sequence_ffmpeg_command(
     for source in sources:
         if not source.is_file():
             raise FileNotFoundError(f"Source video not found: {source}")
+    _validate_captions(captions)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     inputs = [part for source in sources for part in ("-i", str(source))]
@@ -64,7 +89,7 @@ def build_sequence_ffmpeg_command(
             f"crop=1080:1920,fps=30,format=yuv420p,setsar=1,setpts=PTS-STARTPTS[{label}]"
         )
         labels.append(f"[{label}]")
-    concat = "".join(labels) + f"concat=n={len(sources)}:v=1:a=0, {_video_filter()}[final]"
+    concat = "".join(labels) + f"concat=n={len(sources)}:v=1:a=0,{_video_filter(include_captions=captions is not None)}[final]"
     filter_complex = ";".join(chains + [concat])
     return [
         ffmpeg, "-y", *inputs, "-filter_complex", filter_complex,
@@ -75,35 +100,77 @@ def build_sequence_ffmpeg_command(
     ]
 
 
-def build_sequence_thumbnail_command(video: Path, thumbnail: Path, ffmpeg: str = "ffmpeg") -> list[str]:
+def build_sequence_thumbnail_command(
+    video: Path, thumbnail: Path, ffmpeg: str = "ffmpeg",
+    captions: Path | None = None,
+) -> list[str]:
     if not video.is_file():
         raise FileNotFoundError(f"Assembled video not found: {video}")
+    _validate_captions(captions)
     thumbnail.parent.mkdir(parents=True, exist_ok=True)
+    filters = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920"
+    if captions is not None:
+        filters += "," + _CAPTION_FILTER
     return [
         ffmpeg, "-y", "-ss", "1", "-i", str(video), "-frames:v", "1",
-        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
-        str(thumbnail),
+        "-vf", filters, str(thumbnail),
     ]
 
 
+def _run_with_captions(captions: Path | None, output: Path, run) -> None:
+    """Run FFmpeg in a temporary safe-named caption directory (no shell parsing)."""
+    if captions is None:
+        run(None, output.resolve())
+        return
+    _validate_captions(captions)
+    with tempfile.TemporaryDirectory(prefix="wondervexa-captions-") as temp:
+        workdir = Path(temp)
+        shutil.copyfile(captions, workdir / "captions.srt")
+        run(workdir, output.resolve())
+
+
 def assemble_sequence(
-    sources: list[Path], output: Path, thumbnail: Path, target_duration: int = 10
+    sources: list[Path], output: Path, thumbnail: Path, target_duration: int = 10,
+    captions: Path | None = None,
 ) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise RuntimeError("FFmpeg is not installed. Install FFmpeg before assembling.")
-    subprocess.run(
-        build_sequence_ffmpeg_command(sources, output, target_duration, ffmpeg),
-        check=True,
-    )
-    subprocess.run(build_sequence_thumbnail_command(output, thumbnail, ffmpeg), check=True)
+
+    def run(workdir: Path | None, resolved_output: Path) -> None:
+        resolved_sources = [source.resolve() for source in sources]
+        resolved_thumbnail = thumbnail.resolve()
+        command = build_sequence_ffmpeg_command(
+            resolved_sources, resolved_output, target_duration, ffmpeg,
+            (workdir / "captions.srt") if workdir else None,
+        )
+        subprocess.run(command, check=True, cwd=str(workdir) if workdir else None)
+        thumb_command = build_sequence_thumbnail_command(
+            resolved_output, resolved_thumbnail, ffmpeg,
+            (workdir / "captions.srt") if workdir else None,
+        )
+        subprocess.run(thumb_command, check=True, cwd=str(workdir) if workdir else None)
+
+    _run_with_captions(captions, output, run)
 
 
-def assemble(source: Path, output: Path, thumbnail: Path) -> None:
+def assemble(
+    source: Path, output: Path, thumbnail: Path, captions: Path | None = None,
+) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise RuntimeError("FFmpeg is not installed. Install FFmpeg before assembling.")
-    subprocess.run(build_ffmpeg_command(source, output, thumbnail, ffmpeg), check=True)
+
+    def run(workdir: Path | None, resolved_output: Path) -> None:
+        resolved_source = source.resolve()
+        resolved_thumbnail = thumbnail.resolve()
+        command = build_ffmpeg_command(
+            resolved_source, resolved_output, resolved_thumbnail, ffmpeg,
+            (workdir / "captions.srt") if workdir else None,
+        )
+        subprocess.run(command, check=True, cwd=str(workdir) if workdir else None)
+
+    _run_with_captions(captions, output, run)
 
 
 def main() -> int:
@@ -112,13 +179,15 @@ def main() -> int:
                         help="One source clip, or 2+ clips to concatenate in the supplied order")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--thumbnail", required=True, type=Path)
+    parser.add_argument("--captions", type=Path,
+                        help="Optional UTF-8 SRT file to burn into the video and thumbnail")
     parser.add_argument("--target-duration", type=int, default=10,
                         help="Sequence target in seconds (8–12; default 10)")
     args = parser.parse_args()
     if len(args.input) == 1:
-        assemble(args.input[0], args.output, args.thumbnail)
+        assemble(args.input[0], args.output, args.thumbnail, args.captions)
     else:
-        assemble_sequence(args.input, args.output, args.thumbnail, args.target_duration)
+        assemble_sequence(args.input, args.output, args.thumbnail, args.target_duration, args.captions)
     print(f"Created video: {args.output}")
     print(f"Created thumbnail: {args.thumbnail}")
     return 0

@@ -205,7 +205,7 @@ def main() -> int:
                "items": ranked, "source_failures": failures}
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Wrote {len(ranked)} fresh research signals to {output}; failed sources: {len(failures)}")
     return 0 if ranked else 2
 

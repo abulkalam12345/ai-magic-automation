@@ -61,7 +61,7 @@ def build_sequence_ffmpeg_command(
         label = f"clip{index}"
         chains.append(
             f"[{index}:v]scale=1080:1920:force_original_aspect_ratio=increase,"
-            f"crop=1080:1920,setsar=1,setpts=PTS-STARTPTS[{label}]"
+            f"crop=1080:1920,fps=30,format=yuv420p,setsar=1,setpts=PTS-STARTPTS[{label}]"
         )
         labels.append(f"[{label}]")
     concat = "".join(labels) + f"concat=n={len(sources)}:v=1:a=0, {_video_filter()}[final]"

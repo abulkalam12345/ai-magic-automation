@@ -1,8 +1,13 @@
+import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
 
-from media_assembler import build_ffmpeg_command
+MODULE = Path(__file__).parents[1] / "src" / "media_assembler.py"
+SPEC = importlib.util.spec_from_file_location("media_assembler", MODULE)
+media_assembler = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(media_assembler)
+build_ffmpeg_command = media_assembler.build_ffmpeg_command
 
 
 class MediaAssemblerTests(unittest.TestCase):

@@ -146,3 +146,8 @@ Additional non-official snapshot (not accepted as contractual evidence):
 - https://github.com/techdou/agnes-ai-generation-skill/blob/main/references/api.md
 
 **Updated decision:** Agnes remains unapproved. Do not integrate or call its API, and do not enter a payment method. The next required evidence is an official current pricing/quota page for the exact video model plus applicable terms covering commercial outputs and data handling. The API's technical shape is sufficiently documented for a later implementation, but cost and rights are not.
+
+
+## Free.ai CogVideoX candidate (2026-10-11)
+
+See [Free.ai CogVideoX candidate assessment](VIDEO_PROVIDER_FREEAI_ASSESSMENT.md). Free.ai is the strongest new lead found, but API free-balance availability and model routing are not yet clear. Do not integrate or call it until those are resolved.

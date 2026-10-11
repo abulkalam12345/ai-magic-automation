@@ -82,6 +82,8 @@ def validate_manifest(data: Any) -> list[str]:
         value = evidence.get(field)
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
             errors.append(f"{field} must be a positive integer.")
+    if not isinstance(evidence.get("quota_unit"), str) or not evidence["quota_unit"].strip():
+        errors.append("quota_unit must be a non-empty string describing the published quota unit.")
     for field in ("min_duration_seconds", "max_duration_seconds"):
         value = evidence.get(field)
         if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) or value <= 0:

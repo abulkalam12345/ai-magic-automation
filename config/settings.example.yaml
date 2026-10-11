@@ -16,8 +16,21 @@ character:
   description: "A fictional clearly adult woman; define a stable original character bible before generation."
   reference_image: null
 
+branding:
+  watermark:
+    enabled: true
+    text: "AI Magic"
+    placement: "lower-right-safe-area"
+    style: "subtle"
+    preserve_clean_master: true
+
 publishing:
   enabled: false
+  timezone: "Asia/Kathmandu"
+  target_reels_per_24_hours: 2
+  schedule:
+    - "morning"
+    - "evening"
   require_explicit_per_video_approval: true
   platforms:
     youtube_shorts:
@@ -32,4 +45,4 @@ publishing:
 # Never put API keys, OAuth tokens, passwords, or cookies in this file.
 # Platform connections must use official APIs/OAuth and be enabled only after
 # eligibility, permissions, review requirements, and per-video approval are verified.
-# No automatic cross-posting is active in this example configuration.
+# Schedule is a target only; this example does not activate automatic publishing.

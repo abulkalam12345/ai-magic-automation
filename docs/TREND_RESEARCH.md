@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-`src/trend_research.py` is a provider-neutral RSS 2.0 / Atom adapter. It accepts explicitly supplied public HTTPS feed URLs, fetches each with a timeout and a 1 MB response limit, blocks redirects to another host or to HTTP, parses titles/links/summaries/publication timestamps, and preserves source name, source URL and fetch time.
+`src/trend_research.py` is a provider-neutral RSS 2.0 / Atom adapter. It accepts explicitly supplied public HTTPS feed URLs, fetches each with a timeout and a 1 MB response limit, blocks redirects to another host or to HTTP, rejects unsafe or relative article links, validates the freshness window, and parses titles/links/summaries/publication timestamps, and preserves source name, source URL and fetch time.
 
 It drops entries with missing/unparseable dates, entries older than the configured freshness window (72 hours by default), and entries more than two hours in the future. It deduplicates identical URLs and ranks the remaining items using recency and repeated title coverage across feeds. The score is a triage heuristic, not a measure of platform popularity.
 

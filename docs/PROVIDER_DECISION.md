@@ -126,3 +126,23 @@ Independent implementation checked:
 ### Decision
 
 Agnes is the next candidate to investigate, not a selected backend. Do not add an Agnes API key, call the generation endpoint, consume any quota, or enable automated generation yet. No provider credentials were requested and no video generation was attempted during this research.
+
+
+## Agnes official API catalog cross-check (2026-10-11)
+
+The official AgnesAI-Labs model catalog provides more concrete operational information than the homepage, but it does **not** close the free-video approval gap:
+
+- The catalog lists `agnes-video-v2.0` as its video model and documents asynchronous `POST /v1/videos` submission plus polling by `video_id`.
+- It lists Free/default video request throughput as 2 public RPM / 1 actual executable RPM. RPM is a rate limit, **not** a daily free-seconds allowance or a guarantee that a job is free.
+- Its published subscription table lists paid Starter at $4, with 500 video seconds/day; Plus is $10 and Pro is $50. These paid plans are excluded from WonderVexa.
+- The catalog itself warns that limits may change and are not permanent contractual guarantees.
+- The official catalog does not list Agnes Video 2.5 / 2.5 Flash in its video-model table. A separate, non-official integration guide reports a temporary free promotion for `agnes-video-2.5-flash`, but that is not sufficient evidence to approve it or assume the offer is still active. It also reports the non-Flash 2.5 model as paid. Treat both claims as unverified until Agnes publishes matching official pricing and quota terms.
+- No clear commercial/social-media output license or prompt/reference/output data-handling terms were established from the catalog.
+
+Official catalog checked:
+- https://github.com/AgnesAI-Labs/AgnesAI-Models/blob/main/MODEL_CATALOG.md
+
+Additional non-official snapshot (not accepted as contractual evidence):
+- https://github.com/techdou/agnes-ai-generation-skill/blob/main/references/api.md
+
+**Updated decision:** Agnes remains unapproved. Do not integrate or call its API, and do not enter a payment method. The next required evidence is an official current pricing/quota page for the exact video model plus applicable terms covering commercial outputs and data handling. The API's technical shape is sufficiently documented for a later implementation, but cost and rights are not.

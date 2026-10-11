@@ -18,6 +18,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: wondervexa-drafts-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   create-draft:
     runs-on: ubuntu-latest
@@ -26,6 +30,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Restore cross-run topic history
+        uses: actions/cache/restore@v4
+        with:
+          path: output/used_topics.json
+          key: wondervexa-topic-history-${{ github.run_id }}
+          restore-keys: |
+            wondervexa-topic-history-
       - name: Determine slot
         id: slot
         env:
@@ -43,6 +54,11 @@ jobs:
       - name: Build script, SEO metadata and thumbnail draft
         run: |
           python src/content_factory.py --slot "${{ steps.slot.outputs.value }}" --date "$(date -u +%F)"
+      - name: Save updated topic history
+        uses: actions/cache/save@v4
+        with:
+          path: output/used_topics.json
+          key: wondervexa-topic-history-${{ github.run_id }}
       - name: Save draft package
         uses: actions/upload-artifact@v4
         with:

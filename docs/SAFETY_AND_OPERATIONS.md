@@ -1,34 +1,34 @@
 # Safety and Operations
 
 ## Scope boundary
-This repository is only for AI Magic Video Automation. Do not inspect, modify, import, or connect the separate Nepal News project.
+This repository is only for WonderVexa video automation. Do not inspect, modify, import, or connect the separate Nepal News project.
 
-## Secrets
-- Never commit tokens, API keys, OAuth client secrets, cookies, or passwords.
-- Use GitHub Actions Secrets only if a later workflow genuinely needs them.
-- Do not ask the user to paste credentials into chat.
-- Use least-privilege repository and provider permissions.
+## Channel branding
+- Channel name: **WonderVexa**.
+- Logo reference: user-provided blue magical energy-ring image.
+- Add a subtle “WonderVexa” watermark to final video exports, inside vertical safe margins and away from faces, key action, subtitles and platform controls.
+- Preserve a clean master export where practical.
+
+## Daily drafts
+- Scheduled workflow creates two draft packages per day (morning/evening, Asia/Kathmandu).
+- Drafts contain scripts, shot lists, titles, descriptions, keywords, hashtags, metadata and SVG thumbnail concepts.
+- Current topic bank is curated/offline; do not describe it as live trend research or guaranteed unique forever.
+- Scheduled workflows are best-effort and artifacts expire after 14 days.
+- Review all generated content before use.
 
 ## Publishing
-- Target two Reels per rolling 24 hours: one morning and one evening in Asia/Kathmandu time.
-- Intended destinations are YouTube Shorts, Facebook Reels, TikTok, and Instagram Reels, each through its own verified official publishing path.
-- The cadence is a planning target only; no scheduled or automatic publishing is enabled.
-- Never upload automatically. Require explicit approval for each individual final video and the destinations selected for it.
-- Do not publish an unreviewed, failed, or unavailable render merely to meet a schedule.
-- Use official platform APIs and OAuth flows; never use browser automation or credential scraping.
-- Respect music, image, model, and dataset licenses.
-- Disclose realistic synthetic/altered content when the relevant platform policy requires it.
+- Intended destinations: YouTube Shorts, Facebook Reels, TikTok and Instagram Reels.
+- Draft generation does not publish. Automatic publishing remains disabled.
+- Require explicit approval for each final video and selected destinations before any upload.
+- Never publish an unreviewed, failed or unavailable render.
+- Use official platform APIs/OAuth only; never use browser automation or credential scraping.
+- Respect music, image, model and dataset licenses. Disclose synthetic content when policy requires it.
 
-## Watermark
-- Apply a consistent, subtle “AI Magic” watermark to exported videos.
-- Keep it inside vertical safe margins, preferably in a lower corner, without covering faces, key action, subtitles, or platform controls.
-- Preserve a clean master export where practical; create watermarked platform-ready copies.
-
-## Cost controls
-- Free-only by default. Do not enable paid billing or paid APIs.
-- Check current quotas and terms before choosing a provider.
-- Stop rather than silently fall back to a paid service.
-- Record estimated and actual usage for each proof run.
+## Secrets and cost
+- Never commit tokens, API keys, OAuth client secrets, cookies or passwords.
+- Never ask the user to paste credentials into chat.
+- Free-only by default. No paid APIs, billing, credit card or silent paid fallback.
+- Verify provider quota, terms, license and actual cost before any generation call.
 
 ## Human quality review
-Review character identity, adult appearance, face and hands, motion, scene continuity, text legibility, audio levels, vertical framing, watermark placement, and factual claims before approval.
+Review originality, character identity, face/hands, motion, continuity, text legibility, audio, vertical framing, watermark, factual claims and platform metadata before approval.

@@ -10,7 +10,6 @@ import argparse
 import email.utils
 import json
 import re
-import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -99,6 +98,19 @@ def parse_feed(xml_bytes: bytes, source_name: str, source_url: str, fetched_at: 
     return results
 
 
+class _SameHostHTTPSRedirect(urllib.request.HTTPRedirectHandler):
+    """Reject redirects before urllib makes a request to the destination host."""
+    def __init__(self, original_host: str):
+        super().__init__()
+        self.original_host = original_host
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        target = urllib.parse.urlparse(newurl)
+        if target.scheme != "https" or target.hostname != self.original_host:
+            raise ValueError("Feed redirect to a different host or non-HTTPS URL was blocked.")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def fetch_feed(source_name: str, source_url: str, timeout: int = DEFAULT_TIMEOUT_SECONDS) -> list[dict]:
     """Fetch one explicitly configured HTTPS feed; bound response size and redirects."""
     parsed = urllib.parse.urlparse(source_url)
@@ -106,7 +118,8 @@ def fetch_feed(source_name: str, source_url: str, timeout: int = DEFAULT_TIMEOUT
         raise ValueError("Feed URL must use HTTPS.")
     request = urllib.request.Request(source_url, headers={"User-Agent": USER_AGENT, "Accept": "application/atom+xml, application/rss+xml, application/xml, text/xml"})
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        opener = urllib.request.build_opener(_SameHostHTTPSRedirect(parsed.hostname))
+        with opener.open(request, timeout=timeout) as response:
             final = urllib.parse.urlparse(response.geturl())
             if final.scheme != "https" or final.hostname != parsed.hostname:
                 raise ValueError("Feed redirect to a different host or non-HTTPS URL was blocked.")
@@ -128,7 +141,10 @@ def rank_signals(items: list[dict], now: datetime | None = None, max_age_hours: 
         if stamp is None or stamp > current + timedelta(hours=2) or stamp < cutoff:
             continue
         fresh.append((item, stamp))
-    counts = Counter(re.sub(r"[^a-z0-9]+", " ", x[0]["title"].lower()).strip() for x in fresh)
+    source_sets: dict[str, set[str]] = {}
+    for item, _stamp in fresh:
+        title_key = re.sub(r"[^a-z0-9]+", " ", item["title"].lower()).strip()
+        source_sets.setdefault(title_key, set()).add(item.get("source_name", ""))
     unique: dict[str, tuple[dict, datetime]] = {}
     for item, stamp in fresh:
         key = item.get("url", "").strip().rstrip("/")
@@ -141,7 +157,7 @@ def rank_signals(items: list[dict], now: datetime | None = None, max_age_hours: 
     for item, stamp in unique.values():
         title_key = re.sub(r"[^a-z0-9]+", " ", item["title"].lower()).strip()
         age_hours = max(0.0, (current - stamp).total_seconds() / 3600)
-        source_count = counts[title_key]
+        source_count = len(source_sets[title_key])
         score = round((max(0.0, 72.0 - age_hours) / 72.0) * 70 + min(source_count, 3) / 3 * 30, 2)
         ranked.append({**item, "age_hours": round(age_hours, 1), "independent_source_count": source_count,
                        "research_signal_score": score, "signal_label": "fresh_research_signal_not_verified_platform_trend"})

@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -54,6 +56,18 @@ jobs:
       - name: Build script, SEO metadata and thumbnail draft
         run: |
           python src/content_factory.py --slot "${{ steps.slot.outputs.value }}" --date "$(date -u +%F)"
+      - name: Validate every generated draft package
+        shell: bash
+        run: |
+          shopt -s nullglob
+          packages=(output/drafts/*/metadata.json)
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No draft package metadata found."
+            exit 1
+          fi
+          for metadata in "${packages[@]}"; do
+            python src/draft_package_check.py "$(dirname "$metadata")"
+          done
       - name: Save updated topic history
         uses: actions/cache/save@v4
         with:

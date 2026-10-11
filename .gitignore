@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+outputs/
+renders/
+tmp/
+.cache/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store

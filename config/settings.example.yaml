@@ -1,0 +1,24 @@
+project:
+  name: ai-magic-automation
+  output_aspect_ratio: "9:16"
+  output_width: 1080
+  output_height: 1920
+  target_duration_seconds: 10
+
+generation:
+  provider: "not-configured"
+  free_only: true
+  max_cost_usd: 0
+  require_manual_provider_selection: true
+
+character:
+  description: "A fictional clearly adult woman; define a stable original character bible before generation."
+  reference_image: null
+
+publishing:
+  enabled: false
+  require_explicit_per_video_approval: true
+  platform: "youtube"
+
+# Never put API keys or OAuth tokens in this file.
+# Use environment variables or a secure secret store if a provider is approved.

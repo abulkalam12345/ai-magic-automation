@@ -1,0 +1,133 @@
+"""Turn attributed RSS/Atom research signals into original, reviewable story briefs.
+
+This is deterministic template generation, not an AI model and not fact reporting.
+It preserves source attribution and never labels a feed mention as a verified trend.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import urllib.parse
+from datetime import date
+from pathlib import Path
+
+
+def _safe_http_url(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    parsed = urllib.parse.urlparse(value.strip())
+    return parsed.scheme in {"http", "https"} and bool(parsed.hostname) and not parsed.username and not parsed.password
+
+
+def _required_text(item: dict, field: str) -> str:
+    value = item.get(field)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"Signal field '{field}' must be a non-empty string.")
+    return value.strip()
+
+
+def validate_signal(item: object) -> dict:
+    if not isinstance(item, dict):
+        raise ValueError("Each research signal must be a JSON object.")
+    title = _required_text(item, "title")
+    summary = _required_text(item, "summary")
+    source_name = _required_text(item, "source_name")
+    source_url = _required_text(item, "source_url")
+    article_url = _required_text(item, "url")
+    if not _safe_http_url(source_url) or not _safe_http_url(article_url):
+        raise ValueError("Signal source_url and url must be absolute HTTP(S) URLs without credentials.")
+    label = _required_text(item, "signal_label")
+    if label != "fresh_research_signal_not_verified_platform_trend":
+        raise ValueError("Only explicitly labeled, unverified research signals are accepted.")
+    return {**item, "title": title, "summary": summary, "source_name": source_name,
+            "source_url": source_url, "url": article_url, "signal_label": label}
+
+
+def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
+    signal = validate_signal(signal)
+    if slot not in {"morning", "evening"}:
+        raise ValueError("slot must be morning or evening")
+    topic = signal["title"]
+    slug = re.sub(r"[^a-z0-9]+", "-", topic.lower()).strip("-")[:48] or "research-story"
+    story_id = f"{day.isoformat()}-{slot}-research-{slug}"
+    summary = signal["summary"][:420]
+    script = f"""# WonderVexa Original Story Brief
+
+**ID:** {story_id}  
+**Date / slot:** {day.isoformat()} / {slot}  
+**Status:** DRAFT — human review required  
+**Research status:** Signal only; not a verified social-platform trend
+
+## Research input (for inspiration, not as a factual script)
+- **Signal headline:** {topic}
+- **Feed summary:** {summary}
+- **Source:** {signal["source_name"]}
+- **Source feed:** {signal["source_url"]}
+- **Article:** {signal["url"]}
+
+## Original story concept
+Create a fictional magical transformation inspired only by the broad theme of the research signal. Do not reproduce the article, its wording, named people, brands, characters, or unverified factual claims.
+
+## 10-second vertical story
+- **0–2s — Hook:** Open on one striking visual problem connected to the broad theme; no factual claim or copied headline.
+- **2–5s — Build:** Introduce one fictional subject and a clear emotional goal.
+- **5–8s — Magic reveal:** A single readable blue-and-gold magical transformation resolves the visual problem.
+- **8–10s — Payoff:** Hold on the transformed scene, then show the WonderVexa identity.
+
+## Production prompt
+Original fictional fantasy visual, vertical 9:16, cinematic close-up, coherent continuous motion, blue magical energy ring with subtle gold particles, consistent subject design, readable transformation, no text baked into footage, no recognizable copyrighted characters, no living-artist imitation, no logos or real-person likenesses.
+
+## Editorial checks
+- Verify the original source and confirm that the proposed fictional treatment does not misrepresent it.
+- Keep the source links and attribution with the internal draft record.
+- Do not claim this topic is trending or popular based on feed mentions alone.
+- Human review required before video generation or publication.
+"""
+    metadata = {
+        "id": story_id, "channel": "WonderVexa", "date": day.isoformat(),
+        "slot": slot, "status": "draft", "topic": topic,
+        "research_status": "signal_only_not_verified_platform_trend",
+        "signal_label": signal["signal_label"],
+        "source_name": signal["source_name"], "source_url": signal["source_url"],
+        "article_url": signal["url"], "published_at": signal.get("published_at"),
+        "publishing": {"enabled": False, "requires_explicit_video_approval": True},
+    }
+    return script, metadata
+
+
+def generate(signals_path: Path, output_dir: Path, day: date, slot: str) -> Path:
+    try:
+        payload = json.loads(signals_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise ValueError(f"Could not read valid UTF-8 signal JSON: {exc}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
+        raise ValueError("Signal file must contain an object with an items array.")
+    if payload.get("status") != "research_signals_only_not_verified_social_trends":
+        raise ValueError("Signal file status is missing or not approved for research-only use.")
+    candidates = [validate_signal(item) for item in payload["items"]]
+    if not candidates:
+        raise ValueError("No research signals are available.")
+    candidates.sort(key=lambda item: float(item.get("research_signal_score", 0)), reverse=True)
+    script, metadata = build_story_brief(candidates[0], day, slot)
+    destination = output_dir / metadata["id"]
+    destination.mkdir(parents=True, exist_ok=True)
+    (destination / "story.md").write_text(script, encoding="utf-8")
+    (destination / "metadata.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    return destination
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--signals", type=Path, required=True)
+    parser.add_argument("--date", default=date.today().isoformat())
+    parser.add_argument("--slot", choices=("morning", "evening"), required=True)
+    parser.add_argument("--output", type=Path, default=Path("output/research-stories"))
+    args = parser.parse_args()
+    path = generate(args.signals, args.output, date.fromisoformat(args.date), args.slot)
+    print(f"Research story brief created: {path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

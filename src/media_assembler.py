@@ -7,6 +7,7 @@ publishes. Source media and caption text must be owned/licensed and reviewed.
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import tempfile
@@ -35,12 +36,59 @@ def _video_filter(include_watermark: bool = True, include_captions: bool = False
     return ",".join(filters)
 
 
+_SRT_CUE = re.compile(
+    r"(?P<index>\\d+)\\s*\\n"
+    r"(?P<start>\\d{2,}:\\d{2}:\\d{2},\\d{3})\\s+-->\\s+"
+    r"(?P<end>\\d{2,}:\\d{2}:\\d{2},\\d{3})\\s*\\n"
+    r"(?P<text>.*?)(?=\\n\\s*\\n|\\Z)",
+    re.DOTALL,
+)
+
+
+def _srt_milliseconds(timestamp: str) -> int:
+    hours, minutes, remainder = timestamp.split(":")
+    seconds, millis = remainder.split(",")
+    return (((int(hours) * 60 + int(minutes)) * 60) + int(seconds)) * 1000 + int(millis)
+
+
 def _validate_captions(captions: Path | None) -> None:
-    if captions is not None:
-        if not captions.is_file():
-            raise FileNotFoundError(f"Caption file not found: {captions}")
-        if not captions.read_text(encoding="utf-8-sig").strip():
-            raise ValueError("Caption file is empty")
+    if captions is None:
+        return
+    if not captions.is_file():
+        raise FileNotFoundError(f"Caption file not found: {captions}")
+    try:
+        content = captions.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError("Caption file must be valid UTF-8") from exc
+    content = content.replace("\\r\\n", "\\n").replace("\\r", "\\n").strip()
+    if not content:
+        raise ValueError("Caption file is empty")
+
+    cues = []
+    position = 0
+    for match in _SRT_CUE.finditer(content):
+        if content[position:match.start()].strip():
+            raise ValueError("Invalid SRT structure before a caption cue")
+        index = int(match.group("index"))
+        start = _srt_milliseconds(match.group("start"))
+        end = _srt_milliseconds(match.group("end"))
+        cue_text = match.group("text").strip()
+        if index < 1 or not cue_text:
+            raise ValueError("Each SRT cue needs a positive index and non-empty text")
+        if end <= start:
+            raise ValueError("SRT cue end time must be later than its start time")
+        cues.append((index, start, end))
+        position = match.end()
+    if not cues or content[position:].strip():
+        raise ValueError("Invalid SRT file: expected numbered cues and timestamp lines")
+    indexes = [cue[0] for cue in cues]
+    if indexes != list(range(1, len(cues) + 1)):
+        raise ValueError("SRT cue numbers must be sequential starting at 1")
+    previous_end = -1
+    for _, start, end in cues:
+        if start < previous_end:
+            raise ValueError("SRT cues must be chronological and must not overlap")
+        previous_end = end
 
 
 def build_ffmpeg_command(

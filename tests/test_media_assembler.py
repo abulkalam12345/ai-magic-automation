@@ -8,7 +8,7 @@ SPEC = importlib.util.spec_from_file_location("media_assembler", MODULE)
 media_assembler = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(media_assembler)
 
-VALID_SRT = "1\\n00:00:00,000 --> 00:00:02,000\\nHello world\\n"
+VALID_SRT = "1\n00:00:00,000 --> 00:00:02,000\nHello world\n"
 
 
 class MediaAssemblerTests(unittest.TestCase):
@@ -74,10 +74,10 @@ class MediaAssemblerTests(unittest.TestCase):
 
     def test_invalid_srt_timestamp_or_cue_text_rejected(self):
         invalid_examples = [
-            "1\\nnot-a-time --> 00:00:02,000\\nHello",
-            "1\\n00:00:02,000 --> 00:00:01,000\\nHello",
-            "1\\n00:00:00,000 --> 00:00:02,000\\n   ",
-            "1\\n00:00:00,000 --> 00:00:02,000\\nHello\\n\\n3\\n00:00:03,000 --> 00:00:04,000\\nWorld",
+            "1\nnot-a-time --> 00:00:02,000\nHello",
+            "1\n00:00:02,000 --> 00:00:01,000\nHello",
+            "1\n00:00:00,000 --> 00:00:02,000\n   ",
+            "1\n00:00:00,000 --> 00:00:02,000\nHello\n\n3\n00:00:03,000 --> 00:00:04,000\nWorld",
         ]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -91,17 +91,17 @@ class MediaAssemblerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             captions = Path(tmp) / "valid.srt"
             captions.write_text(
-                "1\\n00:00:00,000 --> 00:00:01,000\\nFirst line\\n\\n"
-                "2\\n00:00:01,200 --> 00:00:02,000\\nSecond line\\n",
+                "1\n00:00:00,000 --> 00:00:01,000\nFirst line\n\n"
+                "2\n00:00:01,200 --> 00:00:02,000\nSecond line\n",
                 encoding="utf-8",
             )
             media_assembler._validate_captions(captions)
 
     def test_overlapping_or_out_of_order_srt_cues_rejected(self):
         samples = [
-            "1\\n00:00:00,000 --> 00:00:02,000\\nFirst\\n\\n"
-            "2\\n00:00:01,500 --> 00:00:03,000\\nSecond",
-            "2\\n00:00:00,000 --> 00:00:01,000\\nFirst",
+            "1\n00:00:00,000 --> 00:00:02,000\nFirst\n\n"
+            "2\n00:00:01,500 --> 00:00:03,000\nSecond",
+            "2\n00:00:00,000 --> 00:00:01,000\nFirst",
         ]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

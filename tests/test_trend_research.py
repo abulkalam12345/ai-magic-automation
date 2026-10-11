@@ -90,7 +90,7 @@ class TrendResearchTests(unittest.TestCase):
             output = Path(tmp) / "signals.json"
             with patch.object(sys, "argv", ["trend_research.py", "--feed",
                                             "Example=https://example.org/feed",
-                                            "--output", str(output)]), \\
+                                            "--output", str(output)]), \
                  patch.object(trend, "fetch_feed", return_value=[record]):
                 self.assertEqual(trend.main(), 0)
             payload = json.loads(output.read_text(encoding="utf-8"))

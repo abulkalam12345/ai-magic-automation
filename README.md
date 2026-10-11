@@ -21,6 +21,7 @@ A local ffprobe-based gate checks final MP4 technical properties and PNG thumbna
 
 ## Documentation
 - [Daily content pipeline](docs/DAILY_CONTENT_PIPELINE.md)
+- [First proof storyboard — Wilted Flower Restoration](docs/FIRST_PROOF_STORYBOARD.md)
 - [Project plan](docs/PROJECT_PLAN.md)
 - [Safety and operations](docs/SAFETY_AND_OPERATIONS.md)
 - [Example settings](config/settings.example.yaml)

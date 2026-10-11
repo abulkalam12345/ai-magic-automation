@@ -89,7 +89,7 @@ def parse_feed(xml_bytes: bytes, source_name: str, source_url: str, fetched_at: 
         results.append({
             "title": title,
             "url": link,
-            "summary": re.sub(r"\\s+", " ", summary)[:500],
+            "summary": re.sub(r"\s+", " ", summary)[:500],
             "source_name": source_name,
             "source_url": source_url,
             "published_at": parse_timestamp(published).isoformat() if parse_timestamp(published) else None,

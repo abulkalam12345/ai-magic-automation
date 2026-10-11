@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import xml.etree.ElementTree as ET
 import tempfile
 import unittest
 from datetime import date
@@ -18,6 +19,7 @@ class ContentFactoryTests(unittest.TestCase):
             out = factory.build_package(date(2026, 10, 12), "morning", root / "drafts", root / "history.json")
             self.assertTrue((out / "script.md").is_file())
             self.assertTrue((out / "thumbnail.svg").is_file())
+            ET.parse(out / "thumbnail.svg")  # SVG must remain well-formed XML.
             metadata = json.loads((out / "metadata.json").read_text())
             self.assertEqual(metadata["channel"], "WonderVexa")
             self.assertFalse(metadata["publishing"]["enabled"])
@@ -33,6 +35,29 @@ class ContentFactoryTests(unittest.TestCase):
             second = factory.build_package(date(2026, 10, 12), "evening", root / "drafts", history)
             second_topic = json.loads((second / "metadata.json").read_text())["topic"]
             self.assertNotEqual(first_topic, second_topic)
+
+    def test_invalid_history_shape_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            history = root / "history.json"
+            history.write_text('{"not": "a list"}', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "JSON array"):
+                factory.build_package(date(2026, 10, 12), "morning", root / "drafts", history)
+
+    def test_svg_escapes_xml_special_characters(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original = list(factory.IDEAS)
+            try:
+                factory.IDEAS.append(("A&B <Dream>", "A test premise", "test keyword", "Test hook"))
+                history = root / "history.json"
+                history.write_text(json.dumps([item[0] for item in original]), encoding="utf-8")
+                out = factory.build_package(date(2026, 10, 12), "morning", root / "drafts", history)
+                ET.parse(out / "thumbnail.svg")
+                svg = (out / "thumbnail.svg").read_text(encoding="utf-8")
+                self.assertIn("A&amp;B &lt;Dream&gt;", svg)
+            finally:
+                factory.IDEAS[:] = original
 
     def test_invalid_slot_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

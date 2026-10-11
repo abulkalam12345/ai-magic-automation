@@ -23,13 +23,20 @@ def validate_package(package: Path) -> list[str]:
         return errors
 
     try:
-        metadata: dict[str, Any] = json.loads(
+        raw_metadata = json.loads(
             (package / "metadata.json").read_text(encoding="utf-8")
         )
     except (json.JSONDecodeError, UnicodeDecodeError):
         return ["metadata.json must contain valid UTF-8 JSON."]
+    if not isinstance(raw_metadata, dict):
+        return ["metadata.json must contain a JSON object."]
+    metadata: dict[str, Any] = raw_metadata
 
-    script = (package / "script.md").read_text(encoding="utf-8")
+    try:
+        script = (package / "script.md").read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return ["script.md must contain valid UTF-8 text."]
+
     svg_path = package / "thumbnail.svg"
     try:
         root = ET.parse(svg_path).getroot()
@@ -38,15 +45,21 @@ def validate_package(package: Path) -> list[str]:
     except ET.ParseError:
         errors.append("thumbnail.svg must be well-formed XML.")
 
-    for key in ("id", "channel", "date", "slot", "status", "topic", "title",
-                "description", "long_tail_keywords", "hashtags", "thumbnail",
-                "trend_status", "publishing"):
+    required_fields = (
+        "id", "channel", "date", "slot", "status", "topic", "title",
+        "description", "long_tail_keywords", "hashtags", "thumbnail",
+        "trend_status", "publishing",
+    )
+    for key in required_fields:
         if key not in metadata:
             errors.append(f"metadata.json is missing required field: {key}")
-
     if errors:
         return errors
 
+    for key in ("id", "date", "topic", "title", "description"):
+        value = metadata[key]
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"Metadata field '{key}' must be a non-empty string.")
     if metadata["channel"] != "WonderVexa":
         errors.append("Channel must be WonderVexa.")
     if metadata["status"] != "draft":
@@ -59,21 +72,27 @@ def validate_package(package: Path) -> list[str]:
         errors.append("Draft package must not claim to contain a rendered video.")
     if metadata["trend_status"] != "evergreen_seed_not_live_trend_verified":
         errors.append("Unverified idea-bank topics must be labeled as evergreen seeds.")
+
     publishing = metadata["publishing"]
     if not isinstance(publishing, dict) or publishing.get("enabled") is not False:
         errors.append("Publishing must remain disabled.")
     elif publishing.get("requires_explicit_video_approval") is not True:
         errors.append("Explicit per-video approval must be required.")
-    if not isinstance(metadata["long_tail_keywords"], list) or not metadata["long_tail_keywords"]:
-        errors.append("At least one long-tail keyword is required.")
-    if (not isinstance(metadata["hashtags"], list) or not metadata["hashtags"]
+
+    keywords = metadata["long_tail_keywords"]
+    if (not isinstance(keywords, list) or not keywords
+            or any(not isinstance(item, str) or not item.strip() for item in keywords)):
+        errors.append("Long-tail keywords must be a non-empty list of non-empty strings.")
+
+    hashtags = metadata["hashtags"]
+    if (not isinstance(hashtags, list) or not hashtags
             or any(not isinstance(tag, str) or not re.fullmatch(r"#[A-Za-z0-9_]+", tag)
-                   for tag in metadata["hashtags"])):
+                   for tag in hashtags)):
         errors.append("Hashtags must be a non-empty list of valid #tags.")
-    if metadata["topic"] not in script:
+
+    topic = metadata["topic"]
+    if isinstance(topic, str) and topic and topic not in script:
         errors.append("Script must include the metadata topic.")
-    if metadata["title"] not in metadata["description"] and not metadata["description"].strip():
-        errors.append("Description must not be empty.")
     return errors
 
 

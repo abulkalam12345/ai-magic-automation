@@ -25,6 +25,7 @@ A local ffprobe-based gate checks final MP4 technical properties and PNG thumbna
 - [Daily content pipeline](docs/DAILY_CONTENT_PIPELINE.md)
 - [Trend research adapter](docs/TREND_RESEARCH.md)
 - [Video provider evidence gate](docs/VIDEO_PROVIDER_GATE.md)
+- [Chinese AI video tools assessment](docs/CHINESE_VIDEO_TOOLS_ASSESSMENT.md)
 - [First proof storyboard — Wilted Flower Restoration](docs/FIRST_PROOF_STORYBOARD.md)
 - [First proof two-clip generation plan](docs/FIRST_PROOF_CLIP_PLAN.md)
 - [Project plan](docs/PROJECT_PLAN.md)

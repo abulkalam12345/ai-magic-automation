@@ -56,6 +56,11 @@ class ProviderReadinessTests(unittest.TestCase):
         self.assertTrue(any("free_without_payment_method" in error for error in errors))
         self.assertTrue(any("paid_fallback_disabled" in error for error in errors))
 
+    def test_quota_unit_must_be_described(self):
+        manifest = valid_manifest()
+        manifest["evidence"]["quota_unit"] = ""
+        self.assertTrue(any("quota_unit" in error for error in gate.validate_manifest(manifest)))
+
     def test_non_9_16_dimensions_are_rejected(self):
         manifest = valid_manifest()
         manifest["evidence"]["output_width"] = 768

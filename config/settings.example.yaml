@@ -1,5 +1,6 @@
 project:
   name: ai-magic-automation
+  channel_name: "WonderVexa"
   output_aspect_ratio: "9:16"
   output_width: 1080
   output_height: 1920
@@ -17,9 +18,11 @@ character:
   reference_image: null
 
 branding:
+  channel_name: "WonderVexa"
+  logo_reference: "user-provided blue magical energy ring logo"
   watermark:
     enabled: true
-    text: "AI Magic"
+    text: "WonderVexa"
     placement: "lower-right-safe-area"
     style: "subtle"
     preserve_clean_master: true

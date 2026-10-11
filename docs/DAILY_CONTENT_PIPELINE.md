@@ -28,12 +28,12 @@ The workflow uses a small curated idea bank and attempts to restore/save a cross
 5. Separate official publishing adapters, each left disabled until account/API eligibility and approval are verified.
 
 ## FFmpeg assembly utility
-`src/media_assembler.py` can take an already-generated, licensed source MP4 and:
-- crop/scale to 1080x1920;
-- overlay a subtle WonderVexa watermark near the lower-right safe area;
+`src/media_assembler.py` can take already-generated, licensed source MP4 clips and:
+- process one clip, or concatenate 2+ clips in the supplied order to reach an 8–12 second target;
+- crop/scale to 1080x1920 and overlay a subtle WonderVexa watermark near the lower-right safe area;
 - export H.264 MP4 and a PNG thumbnail frame.
 
-It requires FFmpeg installed locally and is not part of the scheduled draft-only workflow. It does not create source footage, add music, or publish. Run locally only after a video provider has produced an input clip and the user has reviewed the intended output.
+For a sequence, use `python src/media_assembler.py --input shot1.mp4 shot2.mp4 --output output/final.mp4 --thumbnail output/thumbnail.png --target-duration 10`. The source clips must contain enough combined usable footage; the command trims to the selected target duration and does not synthesize missing frames. Audio is intentionally omitted, and clip-to-clip character/scene continuity still requires human review. It requires FFmpeg installed locally and is not part of the scheduled draft-only workflow. It does not create source footage, add music, contact a provider, or publish.
 
 ## Finished-video technical quality gate
 `src/media_quality_check.py` uses `ffprobe` to check a rendered MP4 and PNG thumbnail before human review. It verifies an H.264 video stream, exact 1080x1920 dimensions, yuv420p pixel format, an 8–60 second duration, non-empty files, and the PNG file signature. It does not judge visual quality, rights, story consistency, audio quality, or platform policy; those still need human review. Run it with:

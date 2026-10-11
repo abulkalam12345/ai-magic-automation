@@ -8,7 +8,7 @@ Twice per day (06:15 and 18:15 Asia/Kathmandu), GitHub Actions runs the offline 
 - a generated SVG thumbnail draft;
 - JSON metadata marking the package as draft-only.
 
-The workflow uses a small curated idea bank and a history file within that run. It does not currently have persistent cross-run topic history, live trend research, an AI language model, image/video generation, or FFmpeg rendering. Therefore it must not label its suggestions as live trends or guarantee uniqueness across all future runs. A future persistent history store and verified trend source are needed.
+The workflow uses a small curated idea bank and attempts to restore/save a cross-run topic-history cache using GitHub Actions cache. Cache retention and eviction are controlled by GitHub, so this is best-effort duplicate avoidance, not a permanent ledger or a guarantee of uniqueness. It does not have live trend research, an AI language model, image/video generation, or FFmpeg rendering. Suggestions are explicitly labeled as unverified evergreen seeds, never live trends.
 
 ## Safety and cost
 - No external AI or video-generation API is called.

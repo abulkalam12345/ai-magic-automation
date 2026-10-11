@@ -40,7 +40,7 @@ class TrendResearchTests(unittest.TestCase):
             handler.redirect_request(request, None, 302, "Found", {}, "http://example.org/feed")
 
     def test_rss_summary_whitespace_is_normalized(self):
-        xml = b"""<rss><channel><item><title>Test</title><link>https://example.org/x</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate><description>line one\\n   line two</description></item></channel></rss>"""
+        xml = b"""<rss><channel><item><title>Test</title><link>https://example.org/x</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate><description>line one&#10;   line two</description></item></channel></rss>"""
         result = trend.parse_feed(xml, "Example", "https://example.org/feed")
         self.assertEqual(result[0]["summary"], "line one line two")
 

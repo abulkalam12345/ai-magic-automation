@@ -47,3 +47,26 @@ Target an original 8–12 second 9:16 flower-restoration magic story. Inspect st
 - Sleeping text-to-video demo: https://huggingface.co/spaces/HITMAN6178/text-to-video-gradio-demo
 
 No provider API has been called and no video has been generated.
+
+## Reassessment (2026-10-11, official documentation rechecked)
+
+The current ZeroGPU documentation still lists a Free account allowance of **5 GPU minutes per 24-hour window**, with medium queue priority. The window resets 24 hours after first GPU usage. PRO/Team/Enterprise can extend usage with prepaid credits; this project must not use those plans or credits. ZeroGPU currently documents shared RTX Pro 6000 Blackwell hardware and Gradio-only compatibility for ZeroGPU Spaces. These platform facts do not establish that a particular video-generation Space will finish within the free quota.
+
+Official current references:
+- ZeroGPU quota, queue, hardware, compatibility and billing: https://huggingface.co/docs/hub/en/spaces-zerogpu
+- Hugging Face text-to-video API examples route through Inference Providers such as fal.ai; the Inference Providers docs describe provider billing, so this route is not approved as a zero-cost backend: https://huggingface.co/docs/inference-providers/main/en/tasks/text-to-video
+- Hugging Face inference guide says routed provider calls are billed to the user's Hugging Face account and direct provider calls use the provider's own billing: https://huggingface.co/docs/huggingface_hub/v1.3.2/en/guides/inference
+
+### Decision after reassessment
+
+**No hosted provider is approved for automated production generation yet.** Do not wire Hugging Face Inference Providers, fal.ai, Replicate, or another pay-as-you-go endpoint into the workflow. A free ZeroGPU Space remains a possible one-off manual experiment only after its exact Space API, model license, output settings, per-call duration, and free-tier behavior are checked. Do not spend the daily quota merely to discover whether an unverified demo works.
+
+An open-source notebook (for example, CogVideoX's published Colab notebooks) is a possible manual research path, not a dependable GitHub Actions backend: free notebook GPU availability and session limits are not a guaranteed always-on service. It is not selected as the production provider.
+
+### Next safe proof route
+
+1. Keep provider integration disabled and retain the existing offline draft + FFmpeg assembly + media-QC path.
+2. Continue looking for an exact, publicly callable ZeroGPU Space with a documented model license and compatible short vertical output.
+3. Before any generation call, record the expected GPU reservation and verify it is within the remaining free quota; never allow paid fallback or billing.
+4. If no candidate passes, tell the user honestly that a dependable automated zero-cost video-generation backend is not currently verified. Do not claim daily video generation is ready.
+

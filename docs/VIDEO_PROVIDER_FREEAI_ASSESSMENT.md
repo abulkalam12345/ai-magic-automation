@@ -1,58 +1,57 @@
 # Free.ai CogVideoX candidate assessment (2026-10-11)
 
-## Status: promising free-tier candidate; API activation blocked pending one documentation clarification
+## Status: promising manual-proof candidate; not approved for automation
 
 Official pages inspected:
 - Video product: https://free.ai/video/text-to-video/
+- CogVideoX model page: https://free.ai/models/cogvideox-2b/
 - API documentation: https://free.ai/api/
+- Developer API overview: https://free.ai/developer/
+- Pricing: https://free.ai/pricing/
 - Terms: https://free.ai/terms/
 - Privacy: https://free.ai/privacy/
 
-### Evidence that looks promising
+### Current official evidence
 
-The official video page describes a self-hosted CogVideoX path on Free.ai GPUs:
-- 2–6 second single clips.
-- Native 9:16 portrait is listed as a supported aspect ratio.
-- The page advertises 30,000 free tokens/day for signed-in users and says no credit card is required.
-- A 4-second clip is estimated at about 10,000 tokens on the web page.
-- The page says the CogVideoX self-hosted route is free within the daily token pool, with no watermark.
+The product and model pages describe a self-hosted CogVideoX path:
+- 2–6 second single clips; native 9:16 portrait is listed as supported.
+- The signed-in free account pool is advertised as 30,000 tokens/day, with no credit card required to start.
+- The model page says a typical ~5-second clip uses about 10,000 tokens, with a minimum 15,000 tokens.
+- The API documentation's model table instead lists CogVideoX at 30,000 tokens/video and the free plan at 30,000 tokens/day.
+- The API documents `POST https://api.free.ai/v1/video/generate/`, Bearer API-key authentication, and `GET /v1/status/{job_id}/` for asynchronous status.
+- The Developer API overview says a free user can sign up, confirm email, create an API key under the account API page, and use the free daily pool without a card.
+- The API says exhausted balance returns HTTP 402. The API's token wallet is shared between website and API.
+- The product page advertises clean output without a watermark and supports 9:16.
+- Free.ai's pricing page currently says free accounts are limited to **one video clip every two days**, even though the general free pool is 30K/day. The home page also repeats a video cap. This cap is important and makes two daily WonderVexa videos impossible on the free tier.
+- The Terms describe daily free tokens as subject to change/best-effort. Self-hosted model outputs are described as available for commercial use; CogVideoX is identified as a self-hosted model.
+- The Privacy Policy says prompts and outputs are processed/stored as generation history and not used to train without explicit consent; self-hosted model data stays on Free.ai servers. Check current terms again before any public use.
 
-The official API page independently lists CogVideoX video generation at **5,000 tokens/video**, a Free allowance of **30K/day (pool)**, and 10 API requests/minute. It documents `POST https://api.free.ai/v1/video/generate/`, Bearer API-key authentication, and `GET /v1/status/{job_id}/` for asynchronous status. It says a 402 response is returned when the balance is exhausted; paid token packs and subscriptions are available but must never be used by WonderVexa.
+### Important inconsistencies / operational risks
 
-The official Terms say free tokens replenish daily at midnight UTC on a best-effort basis and may change. They say users retain ownership of inputs and outputs to the extent permitted by law, and that outputs from self-hosted models are available for commercial use. The Terms list CogVideoX among self-hosted models and say those models use commercial licenses. The video product page specifically names CogVideoX as the default self-hosted video model.
-
-The Privacy Policy says prompts and outputs are processed and stored as generation history; inputs/outputs are not used to train models without explicit consent. It says self-hosted model data stays on Free.ai servers and is not sent to third parties. Generation history can be deleted from account settings; after account deletion it is purged within 30 days. Account data may be processed in the United States.
-
-### Critical unresolved documentation mismatch
-
-The API documentation is internally inconsistent:
-- Its opening says users "Purchase tokens" before generating an API key.
-- Its sample video call uses a `premium/kling-video/...` model.
-- Later on the same API page, the model table lists CogVideoX at 5,000 tokens/video, the Free plan as 30K/day, and the endpoint as text/image-to-video (CogVideoX).
-- The product page says CogVideoX is free within the daily token pool, but does not clearly demonstrate whether a free account can create an API key and call the self-hosted CogVideoX endpoint without first buying tokens.
-- The web page says a 4-second clip costs about 10,000 tokens, while the API model table says 5,000 tokens/video. The units/pricing difference needs clarification.
-
-Therefore do not assume that the website's free UI quota is available to API calls, or that an API key is available without purchase. Do not attempt a generation request to discover this: it could spend tokens or encounter a paid route.
+1. **Video token price differs by page.** Model page says ~10,000 tokens for ~5 seconds (minimum 15,000); API page lists 30,000 tokens/video. Do not assume a clip will fit the daily pool or use the lower estimate.
+2. **Free video frequency cap.** Pricing says one clip every two days on Free. That is below WonderVexa's target of two posts per 24 hours and may constrain even a single proof.
+3. **Shared wallet / paid balance risk.** The API uses a shared token balance. A 402 on exhausted balance is documented, but the behavior when an account has purchased tokens is irrelevant to this zero-paid project. Never add purchased tokens, subscribe, enter a payment method, or enable any paid model/fallback.
+4. **Output length.** A single render is 2–6 seconds, not the 8–12 second proof. Multi-clip assembly is now supported locally, but continuity and total duration must be reviewed; two separate clips can visibly change subject identity or scene.
+5. **Best-effort capacity.** Daily pool and GPU capacity are not a production SLA or guaranteed generation allocation.
 
 ### Fit for WonderVexa
 
-- Native 9:16 is advertised, which is a strong fit.
-- Single clips are only 2–6 seconds, shorter than the 8–12 second proof target. A proof would need at least two clips stitched together, or an officially documented extension workflow; consistency across separate clips would need visual review.
-- The 30K/day pool appears to cover only a small number of short clips and is best-effort, not a guaranteed daily production allocation.
-- API rate limit is 10 requests/minute; that is throughput, not quota.
-- No watermark is advertised by the product page.
-- Commercial use is supported by the provider's Terms for self-hosted models, but output uniqueness is not guaranteed. User remains responsible for rights in prompts/reference inputs.
+- Native 9:16 is advertised.
+- Commercial use is advertised for self-hosted outputs, subject to current Terms and applicable law.
+- A 10-second proof can be assembled from multiple short clips if their combined usable duration is sufficient. The local FFmpeg sequence utility can concatenate two or more clips, crop to 1080x1920, add the WonderVexa watermark, and export a thumbnail. It does not generate footage or guarantee character continuity.
+- The current free-tier one-video-every-two-days cap is incompatible with the desired twice-daily production target.
+- The discrepancy in token cost and clip caps means quota must be confirmed in the account UI before any manual test.
 
 ### Decision
 
-**Do not integrate or call the API yet. Keep Free.ai as the leading candidate for a manually controlled proof, not an approved automation backend.**
+**Keep Free.ai as a candidate for a single, manually approved proof only; do not integrate it into scheduled automation.** This is not approval to create an account or spend quota.
 
-Before a one-off test:
-1. Confirm from official support/docs that a Free account can create an API key without buying tokens.
-2. Confirm the CogVideoX API request selects the self-hosted model and cannot silently route to a premium/external model.
-3. Confirm the applicable video API token cost and that a free balance is actually available to the API.
-4. Verify a failed/exhausted request returns a hard stop (e.g. 402) and cannot auto-charge; configure no paid tokens, no subscription, no payment method.
-5. Use only a single, human-approved short proof if all above are clear. Do not use real-person likenesses or unlicensed reference media.
-6. Inspect actual duration, 9:16 dimensions, watermark, character consistency, and quality manually before deciding whether to build an adapter.
+Before a one-off test, the user must explicitly authorize account creation / key handling and a single generation attempt. First verify in official account UI/support:
+1. Exact current CogVideoX model ID and API model selection.
+2. Exact cost and minimum charge for one clip, and whether free account video caps apply equally to API.
+3. The free account can create an API key without purchase (Developer page currently says yes).
+4. Exhausted requests hard-stop and no purchased balance/payment method is attached.
+5. No model routing to premium/external services.
+6. Exact prompt/reference/output data retention terms.
 
-No account was created, no email was submitted, no API key was requested, no API request was made, no tokens were consumed, and no video was generated.
+No account was created, no email was submitted, no API key was requested, no API request was made, no tokens were consumed, and no video was generated. No payment method or paid fallback was enabled.

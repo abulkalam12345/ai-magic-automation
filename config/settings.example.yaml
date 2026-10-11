@@ -4,6 +4,7 @@ project:
   output_width: 1080
   output_height: 1920
   target_duration_seconds: 10
+  content_type: "original AI magic and educational stories"
 
 generation:
   provider: "not-configured"
@@ -18,7 +19,17 @@ character:
 publishing:
   enabled: false
   require_explicit_per_video_approval: true
-  platform: "youtube"
+  platforms:
+    youtube_shorts:
+      enabled: false
+    facebook_reels:
+      enabled: false
+    tiktok:
+      enabled: false
+    instagram_reels:
+      enabled: false
 
-# Never put API keys or OAuth tokens in this file.
-# Use environment variables or a secure secret store if a provider is approved.
+# Never put API keys, OAuth tokens, passwords, or cookies in this file.
+# Platform connections must use official APIs/OAuth and be enabled only after
+# eligibility, permissions, review requirements, and per-video approval are verified.
+# No automatic cross-posting is active in this example configuration.

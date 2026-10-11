@@ -25,7 +25,7 @@ Example after producing a non-empty signal file:
 python src/story_generator.py --signals output/trend-research/signals.json --slot morning
 ```
 
-The output is written under `output/research-stories/`.
+The output is written under `output/research-stories/`. Validate a generated package before review with `python src/story_package_check.py output/research-stories/<story-id>/`; the checker enforces attribution, required sections, draft-only status and explicit approval gates.
 
 ## Run trend research manually
 

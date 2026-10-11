@@ -50,14 +50,25 @@ def _text(element: ET.Element, *names: str) -> str:
     return ""
 
 
+def _safe_article_url(value: str) -> str:
+    """Accept only absolute HTTP(S) article links; reject executable or relative URLs."""
+    parsed = urllib.parse.urlparse(value.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return ""
+    if parsed.username or parsed.password:
+        return ""
+    return value.strip()
+
+
 def _link(item: ET.Element, atom: bool) -> str:
     if atom:
         for child in item.findall(f"{ATOM}link"):
             href = child.attrib.get("href", "").strip()
-            if href and child.attrib.get("rel", "alternate") == "alternate":
-                return href
+            safe_href = _safe_article_url(href)
+            if safe_href and child.attrib.get("rel", "alternate") == "alternate":
+                return safe_href
         return ""
-    return _text(item, "link")
+    return _safe_article_url(_text(item, "link"))
 
 
 def parse_feed(xml_bytes: bytes, source_name: str, source_url: str, fetched_at: datetime | None = None) -> list[dict]:
@@ -133,6 +144,8 @@ def fetch_feed(source_name: str, source_url: str, timeout: int = DEFAULT_TIMEOUT
 
 def rank_signals(items: list[dict], now: datetime | None = None, max_age_hours: int = 72) -> list[dict]:
     """Deduplicate links and rank fresh items by recency and independent source count."""
+    if max_age_hours <= 0:
+        raise ValueError("max_age_hours must be a positive integer.")
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     cutoff = current - timedelta(hours=max_age_hours)
     fresh = []
@@ -172,6 +185,8 @@ def main() -> int:
     args = parser.parse_args()
     if not args.feed:
         parser.error("provide at least one --feed NAME=HTTPS_URL")
+    if args.max_age_hours <= 0:
+        parser.error("--max-age-hours must be a positive integer")
     items = []
     failures = []
     for spec in args.feed:

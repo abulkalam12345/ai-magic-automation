@@ -60,3 +60,13 @@ The checker is a **structural evidence gate only**. It cannot verify the truth o
 - Require human approval for each individual video and each destination.
 - No paid fallback, credit purchase, or billing setup.
 - No provider call is made by this checker.
+
+## Leading candidate: Free.ai CogVideoX (not yet approved)
+
+Official research found a potentially useful self-hosted CogVideoX path: advertised 30K free tokens/day, no credit card, commercial use for self-hosted outputs, and native 9:16 support. However, its API documentation conflicts: the API quick start says to purchase tokens and demonstrates a premium video model, while a later model table lists CogVideoX at 5,000 tokens/video and a 30K/day free pool. The web product page estimates 10K tokens for a 4-second clip. It is not yet clear whether a free account can create an API key and call the self-hosted CogVideoX route without buying tokens.
+
+Privacy terms say prompts/outputs are stored as generation history, are not used to train without explicit consent, and self-hosted model data stays on Free.ai servers. The Terms permit commercial use of self-hosted model outputs. The product supports 2–6 second clips and advertises 9:16; our 8–12 second proof would require multiple clips and continuity review.
+
+Full assessment: [VIDEO_PROVIDER_FREEAI_ASSESSMENT.md](VIDEO_PROVIDER_FREEAI_ASSESSMENT.md).
+
+**Decision:** leading candidate for a controlled evaluation only. No account/API key created, no API request made, no tokens consumed, and no provider integration enabled. Resolve the API free-balance/model-routing mismatch from official support before any generation request.

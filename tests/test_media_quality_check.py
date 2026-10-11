@@ -48,7 +48,7 @@ class MediaQualityTests(unittest.TestCase):
             thumb.write_bytes(b"not a png")
             errors = qc.check_files(video, thumb, valid_probe())
             self.assertTrue(any("valid PNG" in e for e in errors))
-            thumb.write_bytes(b"\\x89PNG\\r\\n\\x1a\\nrest")
+            thumb.write_bytes(b"\x89PNG\r\n\x1a\nrest")
             self.assertEqual(qc.check_files(video, thumb, valid_probe()), [])
 
 

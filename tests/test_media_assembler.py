@@ -21,25 +21,54 @@ class MediaAssemblerTests(unittest.TestCase):
             self.assertIn("WonderVexa", joined)
             self.assertIn("libx264", joined)
             self.assertIn("thumb.png", joined)
+            self.assertNotIn("subtitles=", joined)
 
-    def test_sequence_command_concatenates_in_order_and_adds_watermark(self):
+    def test_optional_srt_is_burned_into_video_and_thumbnail(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            first, second = root / "first.mp4", root / "second.mp4"
-            first.write_bytes(b"placeholder")
-            second.write_bytes(b"placeholder")
-            command = media_assembler.build_sequence_ffmpeg_command(
-                [first, second], root / "out.mp4", target_duration=10
+            source, captions = root / "input.mp4", root / "captions.srt"
+            source.write_bytes(b"placeholder")
+            captions.write_text("1\\n00:00:00,000 --> 00:00:02,000\\nHello world\\n", encoding="utf-8")
+            command = media_assembler.build_ffmpeg_command(
+                source, root / "out.mp4", root / "thumb.png", captions=captions
             )
             joined = " ".join(command)
-            self.assertEqual(command.count("-i"), 2)
-            self.assertIn("concat=n=2:v=1:a=0", joined)
-            self.assertIn("fps=30", joined)
-            self.assertIn("format=yuv420p", joined)
-            self.assertIn("scale=1080:1920", joined)
-            self.assertIn("WonderVexa", joined)
-            self.assertIn("-t 10", joined)
-            self.assertIn("-an", joined)
+            self.assertEqual(joined.count("subtitles=filename='captions.srt'"), 2)
+            self.assertIn("MarginV=260", joined)
+            self.assertLess(joined.index("subtitles="), joined.index("drawtext="))
+
+    def test_sequence_captions_are_applied_after_concat_and_before_watermark(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            captions = root / "captions.srt"
+            captions.write_text("1\\n00:00:00,000 --> 00:00:01,000\\nHello\\n", encoding="utf-8")
+            command = media_assembler.build_sequence_ffmpeg_command(
+                sources, root / "out.mp4", captions=captions
+            )
+            graph = command[command.index("-filter_complex") + 1]
+            self.assertIn("concat=n=2:v=1:a=0", graph)
+            self.assertIn("subtitles=filename='captions.srt'", graph)
+            self.assertLess(graph.index("subtitles="), graph.index("drawtext="))
+
+    def test_empty_and_missing_captions_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input.mp4"
+            source.write_bytes(b"placeholder")
+            with self.assertRaisesRegex(ValueError, "empty"):
+                media_assembler.build_ffmpeg_command(
+                    source, root / "out.mp4", root / "thumb.png",
+                    captions=root / "empty.srt",
+                )
+            empty = root / "empty.srt"
+            empty.write_text("  ", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "empty"):
+                media_assembler.build_ffmpeg_command(
+                    source, root / "out.mp4", root / "thumb.png", captions=empty
+                )
 
     def test_sequence_requires_multiple_sources(self):
         with tempfile.TemporaryDirectory() as tmp:

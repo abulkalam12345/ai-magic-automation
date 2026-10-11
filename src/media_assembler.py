@@ -37,10 +37,10 @@ def _video_filter(include_watermark: bool = True, include_captions: bool = False
 
 
 _SRT_CUE = re.compile(
-    r"(?P<index>\\d+)\\s*\\n"
-    r"(?P<start>\\d{2,}:\\d{2}:\\d{2},\\d{3})\\s+-->\\s+"
-    r"(?P<end>\\d{2,}:\\d{2}:\\d{2},\\d{3})\\s*\\n"
-    r"(?P<text>.*?)(?=\\n\\s*\\n|\\Z)",
+    r"(?P<index>\d+)\s*\n"
+    r"(?P<start>\d{2,}:\d{2}:\d{2},\d{3})\s+-->\s+"
+    r"(?P<end>\d{2,}:\d{2}:\d{2},\d{3})\s*\n"
+    r"(?P<text>.*?)(?=\n\s*\n|\Z)",
     re.DOTALL,
 )
 
@@ -60,7 +60,7 @@ def _validate_captions(captions: Path | None) -> None:
         content = captions.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
         raise ValueError("Caption file must be valid UTF-8") from exc
-    content = content.replace("\\r\\n", "\\n").replace("\\r", "\\n").strip()
+    content = content.replace("\r\n", "\n").replace("\r", "\n").strip()
     if not content:
         raise ValueError("Caption file is empty")
 

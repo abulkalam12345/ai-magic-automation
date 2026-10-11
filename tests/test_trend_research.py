@@ -31,6 +31,19 @@ class TrendResearchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "HTTPS"):
             trend.fetch_feed("bad", "http://example.org/feed")
 
+    def test_redirect_policy_rejects_cross_host_and_http_before_following(self):
+        handler = trend._SameHostHTTPSRedirect("example.org")
+        request = __import__("urllib.request", fromlist=["Request"]).Request("https://example.org/feed")
+        with self.assertRaisesRegex(ValueError, "redirect"):
+            handler.redirect_request(request, None, 302, "Found", {}, "https://evil.example/feed")
+        with self.assertRaisesRegex(ValueError, "redirect"):
+            handler.redirect_request(request, None, 302, "Found", {}, "http://example.org/feed")
+
+    def test_rss_summary_whitespace_is_normalized(self):
+        xml = b"""<rss><channel><item><title>Test</title><link>https://example.org/x</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate><description>line one\\n   line two</description></item></channel></rss>"""
+        result = trend.parse_feed(xml, "Example", "https://example.org/feed")
+        self.assertEqual(result[0]["summary"], "line one line two")
+
     def test_ranking_filters_stale_and_future_and_deduplicates_urls(self):
         now = datetime(2026, 10, 11, 12, tzinfo=timezone.utc)
         def item(title, url, published, source):

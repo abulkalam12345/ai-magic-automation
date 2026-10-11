@@ -88,3 +88,41 @@ Sources:
 - A separate Wan2.2 Remix Space declares its fine-tune license as `other` without providing terms; output rights are unresolved, so it is excluded from commercial use: https://huggingface.co/spaces/mastaP/wan22-remix-sfw-t2v
 
 **Result:** No candidate passed the project's full free-tier, license, API, duration, vertical-output, and operational checks. Keep provider integration disabled. No GPU quota was consumed and no credentials were requested.
+
+
+## New candidate research: Agnes AI API (2026-10-11)
+
+### Status: promising for a controlled evaluation, NOT approved yet
+
+Official Agnes AI homepage currently advertises a **Free API** and lists video generation in its multimodal model suite, including Agnes-Video 2.5. This is stronger evidence of a free API offering than an unverified third-party demo, but the public page inspected does not publish a specific video quota, per-request limit, queue guarantee, no-billing guarantee, or clear commercial-output license terms. Therefore the word "Free" on the homepage is not enough to approve unattended production use.
+
+Official page checked:
+- https://agnes-ai.com/
+
+### Technical/API evidence from an independent MIT-licensed client
+
+The public repository `uglylee/free-video-generator` (MIT) contains a concrete Agnes API client:
+- Video submit endpoint: `https://apihub.agnes-ai.com/v1/videos`
+- Status polling endpoint: `https://apihub.agnes-ai.com/agnesapi?video_id=...`
+- Bearer API-key authentication
+- Model default in that client: `agnes-video-v2.0`
+- The client supports text-to-video, image-to-video, and keyframes submission, and downloads the completed result.
+- It sets configurable width/height; its README advertises portrait `768x1152`, which is 2:3 rather than exact 9:16. The existing WonderVexa FFmpeg crop/scale stage could convert source footage to 9:16, but actual framing/cropping must be visually checked.
+- Its code applies a global 16-request/minute limiter and retry logic. This is the client's own throttle, not proof of Agnes's free quota or service-side limits.
+- Repository claims unlimited free use, but those claims are from an independent project, not Agnes's official terms. Do not treat them as a contractual guarantee.
+
+Independent implementation checked:
+- https://github.com/uglylee/free-video-generator
+- https://github.com/uglylee/free-video-generator/blob/main/core/api/agnes_video.py
+
+### Remaining blockers before integration
+
+1. Verify Agnes account/API signup is available without a payment method and without auto-billing.
+2. Obtain official written video quota/rate-limit details for the exact model exposed to a free account.
+3. Confirm Agnes terms explicitly allow the intended public/commercial social-media use and clarify ownership/retention/training handling for prompts, reference images, and outputs.
+4. Confirm current API model identifier and current supported aspect ratios/durations; the third-party client uses older `agnes-video-v2.0`, while the official homepage now advertises Agnes-Video 2.5.
+5. Only after all checks pass, consider one small, manually approved proof generation. Never test by submitting a video job before free-tier and rights conditions are clear.
+
+### Decision
+
+Agnes is the next candidate to investigate, not a selected backend. Do not add an Agnes API key, call the generation endpoint, consume any quota, or enable automated generation yet. No provider credentials were requested and no video generation was attempted during this research.

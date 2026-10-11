@@ -1,0 +1,62 @@
+# Video provider evidence gate
+
+WonderVexa has no approved hosted video-generation backend. Do not submit generation jobs, add API credentials, consume a free quota, or configure billing while a provider is unapproved.
+
+## Local evidence-manifest checker
+
+Before considering any provider, prepare a JSON manifest from current **official** provider documentation and run:
+
+```bash
+python src/provider_readiness.py path/to/provider-evidence.json
+```
+
+The checker requires official HTTPS references for free-tier pricing/quota, exact model/API documentation, model/output licensing, and prompt/reference/output data handling. It also requires explicit evidence for no-payment-method access, disabled paid fallback, commercial-use permission, daily quota, per-request limit, exact model ID, exact 9:16 dimensions, and an 8–12 second duration range.
+
+Example manifest shape (replace every placeholder with verified official facts; this example is deliberately not a real approval):
+
+```json
+{
+  "schema_version": 1,
+  "provider": "REPLACE_WITH_PROVIDER",
+  "evidence": {
+    "official_free_tier_terms_url": "https://provider.example/free-terms",
+    "official_model_docs_url": "https://provider.example/model-docs",
+    "official_license_terms_url": "https://provider.example/license",
+    "official_data_handling_url": "https://provider.example/data",
+    "free_without_payment_method": false,
+    "paid_fallback_disabled": false,
+    "commercial_use_permitted": false,
+    "prompt_and_output_data_terms_clear": false,
+    "quota_daily_units": 1,
+    "quota_unit": "REPLACE_WITH_UNIT",
+    "per_request_limit": 1,
+    "model_id": "REPLACE_WITH_EXACT_MODEL_ID",
+    "output_width": 1080,
+    "output_height": 1920,
+    "min_duration_seconds": 8,
+    "max_duration_seconds": 12
+  },
+  "controls": {
+    "generation_enabled": false,
+    "automatic_publishing_enabled": false,
+    "requires_per_video_human_approval": true
+  }
+}
+```
+
+The checker is a **structural evidence gate only**. It cannot verify the truth or currentness of cited terms, independently approve a provider, or call an API. A passing manifest does not enable generation. A human must inspect the official terms and approve a one-off proof separately. Stop if a payment method, credits, billing, or paid fallback is required.
+
+## Current candidates
+
+- **Agnes AI — not approved.** Its official homepage advertises a Free API and Agnes-Video 2.5, but the public material checked does not establish the exact free video quota, no-payment/no-billing behavior, current model/API identifier, commercial output rights, or prompt/output data terms. The official model catalog lists Agnes Video 2.0 and a throughput rate; that is not a daily free-seconds guarantee. Do not infer free video generation from the general Free API wording.
+- **Hugging Face ZeroGPU — not approved.** The free quota is limited and does not guarantee a particular video job will complete. Inference Providers are pay-as-you-go and excluded.
+- Community Spaces and third-party clients are leads only, not authoritative evidence of free access, runtime, or commercial rights.
+
+## Permanent safety controls
+
+- Never store API keys in source code or sample manifests.
+- Never enable generation in the scheduled workflow.
+- Never enable automatic publishing.
+- Require human approval for each individual video and each destination.
+- No paid fallback, credit purchase, or billing setup.
+- No provider call is made by this checker.

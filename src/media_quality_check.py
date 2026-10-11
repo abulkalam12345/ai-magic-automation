@@ -43,7 +43,7 @@ def check_files(video_path: Path, thumbnail_path: Path,
         errors.append("Video file is missing or empty.")
     if not thumbnail_path.is_file() or thumbnail_path.stat().st_size == 0:
         errors.append("Thumbnail file is missing or empty.")
-    elif thumbnail_path.read_bytes()[:8] != b"\\x89PNG\\r\\n\\x1a\\n":
+    elif thumbnail_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
         errors.append("Thumbnail must be a valid PNG file.")
     return errors
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
 import re
 from datetime import date
@@ -44,6 +45,8 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
     if slot not in {"morning", "evening"}:
         raise ValueError("slot must be morning or evening")
     history = json.loads(history_file.read_text(encoding="utf-8")) if history_file.exists() else []
+    if not isinstance(history, list) or any(not isinstance(item, str) for item in history):
+        raise ValueError("Topic history must be a JSON array of topic-name strings.")
     title, premise, keyword, hook = choose_idea(day, slot, history)
     video_id = f"{day.isoformat()}-{slot}-{slug(title)}"
     out = out_dir / video_id
@@ -100,7 +103,7 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
         "publishing": {"enabled": False, "requires_explicit_video_approval": True},
     }
     (out / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-    safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    safe_title = html.escape(title, quote=False)
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
 <defs><radialGradient id="bg"><stop offset="0" stop-color="#183d78"/><stop offset="1" stop-color="#050916"/></radialGradient>
 <linearGradient id="ring"><stop stop-color="#6ffcff"/><stop offset=".5" stop-color="#7c8dff"/><stop offset="1" stop-color="#f1aaff"/></linearGradient></defs>

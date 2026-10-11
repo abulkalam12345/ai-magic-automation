@@ -23,6 +23,19 @@ class TrendResearchTests(unittest.TestCase):
         self.assertEqual(result[0]["url"], "https://example.org/b")
         self.assertEqual(result[0]["source_name"], "Atom source")
 
+    def test_rejects_unsafe_or_relative_article_links(self):
+        xml = b"""<rss><channel>
+        <item><title>Unsafe</title><link>javascript:alert(1)</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate></item>
+        <item><title>Relative</title><link>/story</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate></item>
+        <item><title>Safe</title><link>https://example.org/story</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate></item>
+        </channel></rss>"""
+        result = trend.parse_feed(xml, "Example", "https://example.org/feed")
+        self.assertEqual([item["title"] for item in result], ["Safe"])
+
+    def test_rejects_nonpositive_freshness_window(self):
+        with self.assertRaisesRegex(ValueError, "positive"):
+            trend.rank_signals([], max_age_hours=0)
+
     def test_rejects_malformed_xml(self):
         with self.assertRaisesRegex(ValueError, "Invalid feed XML"):
             trend.parse_feed(b"<rss>", "Bad", "https://example.org")

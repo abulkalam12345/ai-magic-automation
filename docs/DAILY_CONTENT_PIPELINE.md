@@ -31,3 +31,11 @@ The workflow uses a small curated idea bank and attempts to restore/save a cross
 - export H.264 MP4 and a PNG thumbnail frame.
 
 It requires FFmpeg installed and is not part of the scheduled draft-only workflow. It does not create source footage, add music, or publish. Run locally only after a video provider has produced an input clip and the user has reviewed the intended output.
+
+## Finished-video technical quality gate
+
+`src/media_quality_check.py` uses `ffprobe` to check a rendered MP4 and PNG thumbnail before human review. It verifies an H.264 video stream, exact 1080x1920 dimensions, yuv420p pixel format, an 8–60 second duration, non-empty files, and the PNG file signature. It does not judge visual quality, rights, story consistency, audio quality, or platform policy; those still need human review. Run it with:
+
+```bash
+python src/media_quality_check.py --video output/final.mp4 --thumbnail output/thumbnail.png
+```

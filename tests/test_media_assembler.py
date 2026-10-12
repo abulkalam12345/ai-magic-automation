@@ -222,5 +222,46 @@ class MediaAssemblerTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
 
+    def test_single_clip_rejects_output_collisions_with_inputs_and_each_other(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source, audio, captions = root / "input.mp4", root / "music.mp3", root / "captions.srt"
+            source.write_bytes(b"placeholder")
+            audio.write_bytes(b"placeholder")
+            captions.write_text(VALID_SRT, encoding="utf-8")
+            cases = [
+                (source, root / "thumb.png", None, None),
+                (root / "out.mp4", source, None, None),
+                (root / "out.mp4", root / "thumb.png", captions, None),
+                (root / "out.mp4", root / "thumb.png", None, audio),
+                (root / "same.mp4", root / "same.mp4", None, None),
+            ]
+            for output, thumbnail, caption_input, audio_input in cases:
+                with self.subTest(output=output, thumbnail=thumbnail), self.assertRaises(ValueError):
+                    media_assembler.build_ffmpeg_command(
+                        source, output, thumbnail, captions=caption_input, audio=audio_input
+                    )
+
+    def test_sequence_rejects_output_collision_with_source_and_thumbnail_collision_with_video(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            with self.assertRaisesRegex(ValueError, "overwrite"):
+                media_assembler.build_sequence_ffmpeg_command(sources, sources[0])
+            with self.assertRaisesRegex(ValueError, "overwrite"):
+                media_assembler.build_sequence_thumbnail_command(sources[0], sources[0])
+
+    def test_sequence_rejects_output_equal_to_thumbnail_before_assembly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            with self.assertRaisesRegex(ValueError, "different files"):
+                media_assembler.assemble_sequence(sources, root / "same", root / "same")
+
+
 if __name__ == "__main__":
     unittest.main()

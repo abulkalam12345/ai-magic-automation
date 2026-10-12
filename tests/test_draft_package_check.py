@@ -125,5 +125,19 @@ class DraftPackageCheckTests(unittest.TestCase):
 
 
 
+    def test_svg_unapproved_attributes_are_rejected(self):
+        unsafe_svgs = [
+            '<svg xmlns="http://www.w3.org/2000/svg" xml:base="https://evil.example/"/>',
+            '<svg xmlns="http://www.w3.org/2000/svg"><rect filter="url(#remote)"/></svg>',
+        ]
+        for unsafe_svg in unsafe_svgs:
+            with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:
+                package = self.make_package(Path(tmp))
+                (package / "thumbnail.svg").write_text(unsafe_svg, encoding="utf-8")
+                self.assertTrue(any("disallowed attribute" in error
+                                    for error in checker.validate_package(package)))
+
+
+
 if __name__ == "__main__":
     unittest.main()

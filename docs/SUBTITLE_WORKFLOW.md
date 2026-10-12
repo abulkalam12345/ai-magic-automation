@@ -23,7 +23,7 @@ Example:
 python src/media_assembler.py --input clip-a.mp4 clip-b.mp4 --output output/final.mp4 --thumbnail output/thumbnail.png --captions captions.srt --target-duration 10
 ```
 
-The assembler validates UTF-8 SRT structure before rendering: cue numbers must be sequential, timestamps must be valid (minutes and seconds are 00–59), each cue must contain text, end times must follow start times, and cues must be chronological and non-overlapping. The SRT is copied into a temporary directory under a safe fixed filename, avoiding filter-path parsing problems. The temporary copy is removed after rendering; retain the original editable SRT separately.
+Before invoking FFmpeg, the assembler resolves output paths and rejects any output/thumbnail collision with source video, captions, or audio, as well as output and thumbnail paths that point to the same file. This protects inputs from FFmpeg's overwrite flag, including equivalent relative paths. The assembler validates UTF-8 SRT structure before rendering: cue numbers must be sequential, timestamps must be valid (minutes and seconds are 00–59), each cue must contain text, end times must follow start times, and cues must be chronological and non-overlapping. The SRT is copied into a temporary directory under a safe fixed filename, avoiding filter-path parsing problems. The temporary copy is removed after rendering; retain the original editable SRT separately.
 
 ## Optional audio
 

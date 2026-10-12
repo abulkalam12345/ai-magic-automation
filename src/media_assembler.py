@@ -1,307 +1,267 @@
-"""Assemble WonderVexa shorts from already-generated, licensed source footage.
-
-Requires FFmpeg with the subtitles/libass filter when --captions is supplied.
-This module never generates footage, downloads assets, contacts a provider, or
-publishes. Source media and caption text must be owned/licensed and reviewed.
-"""
-from __future__ import annotations
-
-import argparse
-import re
-import shutil
-import subprocess
+import importlib.util
 import tempfile
+import unittest
+import subprocess
+from unittest import mock
 from pathlib import Path
 
+MODULE = Path(__file__).parents[1] / "src" / "media_assembler.py"
+SPEC = importlib.util.spec_from_file_location("media_assembler", MODULE)
+media_assembler = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(media_assembler)
 
-_CAPTION_FILTER = (
-    "subtitles=filename='captions.srt':"
-    "force_style='FontName=Arial,FontSize=22,Alignment=2,MarginV=260,Outline=2,Shadow=1'"
-)
-
-
-def _video_filter(include_watermark: bool = True, include_captions: bool = False) -> str:
-    filters = [
-        "scale=1080:1920:force_original_aspect_ratio=increase",
-        "crop=1080:1920",
-    ]
-    if include_captions:
-        filters.append(_CAPTION_FILTER)
-    if include_watermark:
-        filters.append(
-            "drawtext=text='WonderVexa':fontcolor=white@0.82:fontsize=34:"
-            "box=1:boxcolor=black@0.22:boxborderw=12:"
-            "x=w-tw-64:y=h-th-100"
-        )
-    return ",".join(filters)
+VALID_SRT = "1\n00:00:00,000 --> 00:00:02,000\nHello world\n"
 
 
-_SRT_CUE = re.compile(
-    r"(?P<index>\d+)\s*\n"
-    r"(?P<start>\d{2,}:\d{2}:\d{2},\d{3})\s+-->\s+"
-    r"(?P<end>\d{2,}:\d{2}:\d{2},\d{3})\s*\n"
-    r"(?P<text>.*?)(?=\n\s*\n|\Z)",
-    re.DOTALL,
-)
+class MediaAssemblerTests(unittest.TestCase):
+    def test_command_has_vertical_format_and_watermark(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input.mp4"
+            source.write_bytes(b"placeholder")
+            command = media_assembler.build_ffmpeg_command(source, root / "out.mp4", root / "thumb.png")
+            joined = " ".join(command)
+            self.assertIn("scale=1080:1920", joined)
+            self.assertIn("WonderVexa", joined)
+            self.assertIn("libx264", joined)
+            self.assertIn("thumb.png", joined)
+            self.assertNotIn("subtitles=", joined)
 
+    def test_optional_audio_is_looped_mixed_quietly_and_faded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source, audio = root / "input.mp4", root / "licensed-music.mp3"
+            source.write_bytes(b"placeholder")
+            audio.write_bytes(b"placeholder")
+            command = media_assembler.build_ffmpeg_command(
+                source, root / "out.mp4", root / "thumb.png", audio=audio
+            )
+            joined = " ".join(command)
+            self.assertIn("-stream_loop -1 -i", joined)
+            self.assertIn("volume=0.20,afade=t=out:st=59:d=1", joined)
+            self.assertIn("-c:a aac", joined)
+            self.assertNotIn("-an", command)
 
-def _srt_milliseconds(timestamp: str) -> int:
-    hours, minutes, remainder = timestamp.split(":")
-    seconds, millis = remainder.split(",")
-    hours_value, minutes_value = int(hours), int(minutes)
-    seconds_value, millis_value = int(seconds), int(millis)
-    if minutes_value > 59 or seconds_value > 59:
-        raise ValueError("SRT minutes and seconds must be between 00 and 59")
-    return (((hours_value * 60 + minutes_value) * 60) + seconds_value) * 1000 + millis_value
+    def test_sequence_audio_is_trimmed_and_faded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            audio = root / "licensed-music.mp3"
+            audio.write_bytes(b"placeholder")
+            command = media_assembler.build_sequence_ffmpeg_command(
+                sources, root / "out.mp4", target_duration=10, audio=audio
+            )
+            graph = command[command.index("-filter_complex") + 1]
+            self.assertIn("[2:a]atrim=duration=10", graph)
+            self.assertIn("volume=0.20,afade=t=out:st=9:d=1[audio]", graph)
+            self.assertIn("-map [audio]", " ".join(command))
+            self.assertNotIn("-an", command)
 
+    def test_missing_audio_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input.mp4"
+            source.write_bytes(b"placeholder")
+            with self.assertRaises(FileNotFoundError):
+                media_assembler.build_ffmpeg_command(
+                    source, root / "out.mp4", root / "thumb.png", audio=root / "missing.mp3"
+                )
 
-def _validate_captions(captions: Path | None) -> None:
-    if captions is None:
-        return
-    if not captions.is_file():
-        raise FileNotFoundError(f"Caption file not found: {captions}")
-    try:
-        content = captions.read_text(encoding="utf-8-sig")
-    except UnicodeDecodeError as exc:
-        raise ValueError("Caption file must be valid UTF-8") from exc
-    content = content.replace("\r\n", "\n").replace("\r", "\n").strip()
-    if not content:
-        raise ValueError("Caption file is empty")
+    def test_optional_valid_srt_is_burned_into_video_and_thumbnail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source, captions = root / "input.mp4", root / "captions.srt"
+            source.write_bytes(b"placeholder")
+            captions.write_text(VALID_SRT, encoding="utf-8")
+            command = media_assembler.build_ffmpeg_command(
+                source, root / "out.mp4", root / "thumb.png", captions=captions
+            )
+            joined = " ".join(command)
+            self.assertEqual(joined.count("subtitles=filename='captions.srt'"), 2)
+            self.assertIn("MarginV=260", joined)
+            self.assertLess(joined.index("subtitles="), joined.index("drawtext="))
 
-    cues = []
-    position = 0
-    for match in _SRT_CUE.finditer(content):
-        if content[position:match.start()].strip():
-            raise ValueError("Invalid SRT structure before a caption cue")
-        index = int(match.group("index"))
-        start = _srt_milliseconds(match.group("start"))
-        end = _srt_milliseconds(match.group("end"))
-        cue_text = match.group("text").strip()
-        if index < 1 or not cue_text:
-            raise ValueError("Each SRT cue needs a positive index and non-empty text")
-        if end <= start:
-            raise ValueError("SRT cue end time must be later than its start time")
-        cues.append((index, start, end))
-        position = match.end()
-    if not cues or content[position:].strip():
-        raise ValueError("Invalid SRT file: expected numbered cues and timestamp lines")
-    indexes = [cue[0] for cue in cues]
-    if indexes != list(range(1, len(cues) + 1)):
-        raise ValueError("SRT cue numbers must be sequential starting at 1")
-    previous_end = -1
-    for _, start, end in cues:
-        if start < previous_end:
-            raise ValueError("SRT cues must be chronological and must not overlap")
-        previous_end = end
+    def test_sequence_captions_are_applied_after_concat_and_before_watermark(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            captions = root / "captions.srt"
+            captions.write_text(VALID_SRT, encoding="utf-8")
+            command = media_assembler.build_sequence_ffmpeg_command(
+                sources, root / "out.mp4", captions=captions
+            )
+            graph = command[command.index("-filter_complex") + 1]
+            self.assertIn("concat=n=2:v=1:a=0", graph)
+            self.assertIn("subtitles=filename='captions.srt'", graph)
+            self.assertLess(graph.index("subtitles="), graph.index("drawtext="))
 
+    def test_missing_and_empty_captions_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input.mp4"
+            source.write_bytes(b"placeholder")
+            with self.assertRaises(FileNotFoundError):
+                media_assembler.build_ffmpeg_command(
+                    source, root / "out.mp4", root / "thumb.png",
+                    captions=root / "missing.srt",
+                )
+            empty = root / "empty.srt"
+            empty.write_text("  ", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "empty"):
+                media_assembler.build_ffmpeg_command(
+                    source, root / "out.mp4", root / "thumb.png", captions=empty
+                )
 
-def build_ffmpeg_command(
-    source: Path, output: Path, thumbnail: Path, ffmpeg: str = "ffmpeg",
-    captions: Path | None = None, audio: Path | None = None,
-) -> list[str]:
-    if not source.is_file():
-        raise FileNotFoundError(f"Source video not found: {source}")
-    _validate_captions(captions)
-    if audio is not None and not audio.is_file():
-        raise FileNotFoundError(f"Audio file not found: {audio}")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    thumbnail.parent.mkdir(parents=True, exist_ok=True)
-    command = [ffmpeg, "-y", "-i", str(source)]
-    if audio is not None:
-        command += ["-stream_loop", "-1", "-i", str(audio)]
-    command += [
-        "-vf", _video_filter(include_captions=captions is not None), "-t", "60",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "23",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-    ]
-    if audio is None:
-        command += ["-an"]
-    else:
-        command += [
-            "-map", "0:v:0", "-map", "1:a:0",
-            "-af", "volume=0.20,afade=t=out:st=59:d=1",
-            "-c:a", "aac", "-b:a", "192k", "-shortest",
+    def test_invalid_srt_timestamp_or_cue_text_rejected(self):
+        invalid_examples = [
+            "1\nnot-a-time --> 00:00:02,000\nHello",
+            "1\n00:60:00,000 --> 00:01:02,000\nInvalid minutes",
+            "1\n00:00:00,000 --> 00:00:99,000\nInvalid seconds",
+            "1\n00:00:02,000 --> 00:00:01,000\nHello",
+            "1\n00:00:00,000 --> 00:00:02,000\n   ",
+            "1\n00:00:00,000 --> 00:00:02,000\nHello\n\n3\n00:00:03,000 --> 00:00:04,000\nWorld",
         ]
-    command += [
-        str(output),
-        "-ss", "1", "-i", str(source), "-frames:v", "1",
-        "-vf", _video_filter(include_watermark=False, include_captions=captions is not None),
-        str(thumbnail),
-    ]
-    return command
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for number, content in enumerate(invalid_examples):
+                captions = root / f"bad-{number}.srt"
+                captions.write_text(content, encoding="utf-8")
+                with self.subTest(content=content), self.assertRaises(ValueError):
+                    media_assembler._validate_captions(captions)
+
+    def test_valid_multiple_srt_cues_are_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            captions = Path(tmp) / "valid.srt"
+            captions.write_text(
+                "1\n00:00:00,000 --> 00:00:01,000\nFirst line\n\n"
+                "2\n00:00:01,200 --> 00:00:02,000\nSecond line\n",
+                encoding="utf-8",
+            )
+            media_assembler._validate_captions(captions)
+
+    def test_overlapping_or_out_of_order_srt_cues_rejected(self):
+        samples = [
+            "1\n00:00:00,000 --> 00:00:02,000\nFirst\n\n"
+            "2\n00:00:01,500 --> 00:00:03,000\nSecond",
+            "2\n00:00:00,000 --> 00:00:01,000\nFirst",
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for number, content in enumerate(samples):
+                captions = root / f"bad-order-{number}.srt"
+                captions.write_text(content, encoding="utf-8")
+                with self.subTest(number=number), self.assertRaises(ValueError):
+                    media_assembler._validate_captions(captions)
+
+    def test_sequence_requires_multiple_sources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "one.mp4"
+            source.write_bytes(b"placeholder")
+            with self.assertRaisesRegex(ValueError, "at least two"):
+                media_assembler.build_sequence_ffmpeg_command([source], Path("out.mp4"))
+
+    def test_sequence_target_must_be_8_to_12_seconds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            for duration in (7, 13):
+                with self.subTest(duration=duration):
+                    with self.assertRaisesRegex(ValueError, "8 and 12"):
+                        media_assembler.build_sequence_ffmpeg_command(
+                            sources, root / "out.mp4", target_duration=duration
+                        )
+
+    def test_missing_source_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaises(FileNotFoundError):
+                media_assembler.build_ffmpeg_command(
+                    root / "missing.mp4", root / "out.mp4", root / "thumb.png"
+                )
 
 
-def build_sequence_ffmpeg_command(
-    sources: list[Path], output: Path, target_duration: int = 10, ffmpeg: str = "ffmpeg",
-    captions: Path | None = None, audio: Path | None = None,
-) -> list[str]:
-    """Concatenate 2+ silent clips into an 8–12 second vertical short."""
-    if len(sources) < 2:
-        raise ValueError("A clip sequence requires at least two source videos")
-    if not 8 <= target_duration <= 12:
-        raise ValueError("Target duration must be between 8 and 12 seconds")
-    for source in sources:
-        if not source.is_file():
-            raise FileNotFoundError(f"Source video not found: {source}")
-    _validate_captions(captions)
-    if audio is not None and not audio.is_file():
-        raise FileNotFoundError(f"Audio file not found: {audio}")
+    def test_ffmpeg_timeout_removes_partial_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output, thumb = root / "out.mp4", root / "thumb.png"
+            output.write_bytes(b"partial")
+            thumb.write_bytes(b"partial")
+            with mock.patch.object(media_assembler.subprocess, "run",
+                                   side_effect=subprocess.TimeoutExpired("ffmpeg", 600)) as run:
+                with self.assertRaisesRegex(RuntimeError, "10-minute"):
+                    media_assembler._execute_ffmpeg(["ffmpeg"], None, [output, thumb])
+            self.assertEqual(run.call_args.kwargs["timeout"], 600)
+            self.assertFalse(output.exists())
+            self.assertFalse(thumb.exists())
 
-    output.parent.mkdir(parents=True, exist_ok=True)
-    inputs = [part for source in sources for part in ("-i", str(source))]
-    if audio is not None:
-        inputs += ["-stream_loop", "-1", "-i", str(audio)]
-    chains = []
-    labels = []
-    for index in range(len(sources)):
-        label = f"clip{index}"
-        chains.append(
-            f"[{index}:v]scale=1080:1920:force_original_aspect_ratio=increase,"
-            f"crop=1080:1920,fps=30,format=yuv420p,setsar=1,setpts=PTS-STARTPTS[{label}]"
-        )
-        labels.append(f"[{label}]")
-    concat = "".join(labels) + f"concat=n={len(sources)}:v=1:a=0,{_video_filter(include_captions=captions is not None)}[final]"
-    filter_parts = chains + [concat]
-    if audio is not None:
-        audio_index = len(sources)
-        filter_parts.append(
-            f"[{audio_index}:a]atrim=duration={target_duration},asetpts=PTS-STARTPTS,"
-            f"volume=0.20,afade=t=out:st={target_duration - 1}:d=1[audio]"
-        )
-    filter_complex = ";".join(filter_parts)
-    command = [
-        ffmpeg, "-y", *inputs, "-filter_complex", filter_complex,
-        "-map", "[final]", "-t", str(target_duration),
-        "-c:v", "libx264", "-preset", "medium", "-crf", "23",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-    ]
-    if audio is None:
-        command += ["-an"]
-    else:
-        command += ["-map", "[audio]", "-c:a", "aac", "-b:a", "192k", "-shortest"]
-    command += [str(output)]
-    return command
+    def test_ffmpeg_failure_removes_partial_outputs_and_limits_error_detail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / "out.mp4"
+            output.write_bytes(b"partial")
+            failure = subprocess.CalledProcessError(1, "ffmpeg", stderr="bad media")
+            with mock.patch.object(media_assembler.subprocess, "run", side_effect=failure):
+                with self.assertRaisesRegex(RuntimeError, "bad media"):
+                    media_assembler._execute_ffmpeg(["ffmpeg"], None, [output])
+            self.assertFalse(output.exists())
+
+    def test_ffmpeg_start_error_is_reported_cleanly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "out.mp4"
+            output.write_bytes(b"partial")
+            with mock.patch.object(media_assembler.subprocess, "run",
+                                   side_effect=FileNotFoundError("ffmpeg")):
+                with self.assertRaisesRegex(RuntimeError, "could not be started"):
+                    media_assembler._execute_ffmpeg(["ffmpeg"], None, [output])
+            self.assertFalse(output.exists())
 
 
-def build_sequence_thumbnail_command(
-    video: Path, thumbnail: Path, ffmpeg: str = "ffmpeg",
-    captions: Path | None = None,
-) -> list[str]:
-    if not video.is_file():
-        raise FileNotFoundError(f"Assembled video not found: {video}")
-    _validate_captions(captions)
-    thumbnail.parent.mkdir(parents=True, exist_ok=True)
-    filters = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920"
-    if captions is not None:
-        filters += "," + _CAPTION_FILTER
-    return [
-        ffmpeg, "-y", "-ss", "1", "-i", str(video), "-frames:v", "1",
-        "-vf", filters, str(thumbnail),
-    ]
+    def test_single_clip_rejects_output_collisions_with_inputs_and_each_other(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source, audio, captions = root / "input.mp4", root / "music.mp3", root / "captions.srt"
+            source.write_bytes(b"placeholder")
+            audio.write_bytes(b"placeholder")
+            captions.write_text(VALID_SRT, encoding="utf-8")
+            cases = [
+                (source, root / "thumb.png", None, None),
+                (root / "out.mp4", source, None, None),
+                (root / "out.mp4", root / "thumb.png", captions, None),
+                (root / "out.mp4", root / "thumb.png", None, audio),
+                (root / "same.mp4", root / "same.mp4", None, None),
+            ]
+            for output, thumbnail, caption_input, audio_input in cases:
+                with self.subTest(output=output, thumbnail=thumbnail), self.assertRaises(ValueError):
+                    media_assembler.build_ffmpeg_command(
+                        source, output, thumbnail, captions=caption_input, audio=audio_input
+                    )
 
+    def test_sequence_rejects_output_collision_with_source_and_thumbnail_collision_with_video(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            with self.assertRaisesRegex(ValueError, "overwrite"):
+                media_assembler.build_sequence_ffmpeg_command(sources, sources[0])
+            with self.assertRaisesRegex(ValueError, "overwrite"):
+                media_assembler.build_sequence_thumbnail_command(sources[0], sources[0])
 
-def _execute_ffmpeg(command: list[str], cwd: str | None, outputs: list[Path]) -> None:
-    """Run FFmpeg with a hard timeout and remove incomplete deliverables on failure."""
-    try:
-        subprocess.run(command, check=True, cwd=cwd, timeout=600)
-    except subprocess.TimeoutExpired as exc:
-        for path in outputs:
-            path.unlink(missing_ok=True)
-        raise RuntimeError("FFmpeg exceeded the 10-minute processing limit.") from exc
-    except subprocess.CalledProcessError as exc:
-        for path in outputs:
-            path.unlink(missing_ok=True)
-        detail = (exc.stderr or "").strip() if isinstance(exc.stderr, str) else ""
-        if len(detail) > 500:
-            detail = detail[:500] + "..."
-        message = "FFmpeg failed to assemble the media."
-        if detail:
-            message += f" Details: {detail}"
-        raise RuntimeError(message) from exc
-    except OSError as exc:
-        for path in outputs:
-            path.unlink(missing_ok=True)
-        raise RuntimeError("FFmpeg could not be started; check the FFmpeg installation.") from exc
-
-
-def _run_with_captions(captions: Path | None, output: Path, run) -> None:
-    """Run FFmpeg in a temporary safe-named caption directory (no shell parsing)."""
-    if captions is None:
-        run(None, output.resolve())
-        return
-    _validate_captions(captions)
-    with tempfile.TemporaryDirectory(prefix="wondervexa-captions-") as temp:
-        workdir = Path(temp)
-        shutil.copyfile(captions, workdir / "captions.srt")
-        run(workdir, output.resolve())
-
-
-def assemble_sequence(
-    sources: list[Path], output: Path, thumbnail: Path, target_duration: int = 10,
-    captions: Path | None = None, audio: Path | None = None,
-) -> None:
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise RuntimeError("FFmpeg is not installed. Install FFmpeg before assembling.")
-
-    def run(workdir: Path | None, resolved_output: Path) -> None:
-        resolved_sources = [source.resolve() for source in sources]
-        resolved_thumbnail = thumbnail.resolve()
-        command = build_sequence_ffmpeg_command(
-            resolved_sources, resolved_output, target_duration, ffmpeg,
-            (workdir / "captions.srt") if workdir else None, audio.resolve() if audio else None,
-        )
-        _execute_ffmpeg(command, str(workdir) if workdir else None, [resolved_output, resolved_thumbnail])
-        thumb_command = build_sequence_thumbnail_command(
-            resolved_output, resolved_thumbnail, ffmpeg,
-            (workdir / "captions.srt") if workdir else None,
-        )
-        _execute_ffmpeg(thumb_command, str(workdir) if workdir else None, [resolved_thumbnail])
-
-    _run_with_captions(captions, output, run)
-
-
-def assemble(
-    source: Path, output: Path, thumbnail: Path, captions: Path | None = None,
-    audio: Path | None = None,
-) -> None:
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise RuntimeError("FFmpeg is not installed. Install FFmpeg before assembling.")
-
-    def run(workdir: Path | None, resolved_output: Path) -> None:
-        resolved_source = source.resolve()
-        resolved_thumbnail = thumbnail.resolve()
-        command = build_ffmpeg_command(
-            resolved_source, resolved_output, resolved_thumbnail, ffmpeg,
-            (workdir / "captions.srt") if workdir else None, audio.resolve() if audio else None,
-        )
-        _execute_ffmpeg(command, str(workdir) if workdir else None, [resolved_output, resolved_thumbnail])
-
-    _run_with_captions(captions, output, run)
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", required=True, nargs="+", type=Path,
-                        help="One source clip, or 2+ clips to concatenate in the supplied order")
-    parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--thumbnail", required=True, type=Path)
-    parser.add_argument("--captions", type=Path,
-                        help="Optional UTF-8 SRT file to burn into the video and thumbnail")
-    parser.add_argument("--audio", type=Path,
-                        help="Optional user-supplied, licensed music/audio file; looped and mixed at 20%")
-    parser.add_argument("--target-duration", type=int, default=10,
-                        help="Sequence target in seconds (8–12; default 10)")
-    args = parser.parse_args()
-    if len(args.input) == 1:
-        assemble(args.input[0], args.output, args.thumbnail, args.captions, args.audio)
-    else:
-        assemble_sequence(args.input, args.output, args.thumbnail, args.target_duration, args.captions, args.audio)
-    print(f"Created video: {args.output}")
-    print(f"Created thumbnail: {args.thumbnail}")
-    return 0
+    def test_sequence_rejects_output_equal_to_thumbnail_before_assembly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            with self.assertRaisesRegex(ValueError, "different files"):
+                media_assembler.assemble_sequence(sources, root / "same", root / "same")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    unittest.main()

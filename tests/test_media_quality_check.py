@@ -25,7 +25,7 @@ def valid_png_header(width=1080, height=1920):
     ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
     chunk_type_and_data = b"IHDR" + ihdr_data
     crc = zlib.crc32(chunk_type_and_data) & 0xFFFFFFFF
-    return (b"\\x89PNG\\r\\n\\x1a\\n" + struct.pack(">I", 13)
+    return (b"\x89PNG\\r\\n\x1a\\n" + struct.pack(">I", 13)
             + chunk_type_and_data + struct.pack(">I", crc))
 
 
@@ -88,10 +88,10 @@ class MediaQualityTests(unittest.TestCase):
         self.assertTrue(any("checksum" in error for error in qc.validate_png_header(bytes(header))))
 
     def test_png_truncated_ihdr_fails(self):
-        self.assertTrue(any("truncated" in error for error in qc.validate_png_header(b"\\x89PNG")))
+        self.assertTrue(any("truncated" in error for error in qc.validate_png_header(b"\x89PNG")))
 
     def test_png_signature_only_is_rejected(self):
-        header = b"\\x89PNG\\r\\n\\x1a\\n" + b"rest"
+        header = b"\x89PNG\\r\\n\x1a\\n" + b"rest"
         self.assertTrue(qc.validate_png_header(header))
 
     def test_files_validate_png_header(self):

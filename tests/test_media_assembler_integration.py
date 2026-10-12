@@ -76,6 +76,30 @@ class MediaAssemblerIntegrationTests(unittest.TestCase):
         self.assertEqual(thumbnail.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(quality_check.inspect(output, thumbnail, require_audio=True), [])
 
+    def test_single_clip_caption_render_and_thumbnail(self):
+        filters = subprocess.run(
+            [FFMPEG, "-hide_banner", "-filters"],
+            check=True, capture_output=True, text=True,
+        ).stdout
+        if " subtitles " not in filters:
+            self.skipTest("FFmpeg subtitles/libass filter is unavailable")
+        source = self.root / "caption-source.mp4"
+        captions = self.root / "captions.srt"
+        output = self.root / "captioned.mp4"
+        thumbnail = self.root / "captioned.png"
+        self.make_video(source, 8)
+        captions.write_text(
+            "1\\n00:00:00,500 --> 00:00:02,500\\nWonderVexa caption test\\n",
+            encoding="utf-8",
+        )
+        assembler.assemble(source, output, thumbnail, captions=captions)
+        data = self.probe(output)
+        picture = next(s for s in data["streams"] if s["codec_type"] == "video")
+        self.assertEqual(picture["codec_name"], "h264")
+        self.assertEqual((picture["width"], picture["height"]), (1080, 1920))
+        self.assertEqual(thumbnail.read_bytes()[:8], b"\\x89PNG\\r\\n\\x1a\\n")
+        self.assertEqual(quality_check.inspect(output, thumbnail), [])
+
     def test_sequence_audio_render_and_thumbnail(self):
         first = self.root / "first.mp4"
         second = self.root / "second.mp4"

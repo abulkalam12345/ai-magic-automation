@@ -1,6 +1,8 @@
 import importlib.util
+import struct
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 MODULE = Path(__file__).parents[1] / "src" / "media_quality_check.py"
@@ -17,6 +19,14 @@ def valid_probe():
         }],
         "format": {"duration": "10.0"},
     }
+
+
+def valid_png_header(width=1080, height=1920):
+    ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    chunk_type_and_data = b"IHDR" + ihdr_data
+    crc = zlib.crc32(chunk_type_and_data) & 0xFFFFFFFF
+    return (b"\\x89PNG\\r\\n\\x1a\\n" + struct.pack(">I", 13)
+            + chunk_type_and_data + struct.pack(">I", crc))
 
 
 class MediaQualityTests(unittest.TestCase):
@@ -65,7 +75,26 @@ class MediaQualityTests(unittest.TestCase):
         errors = qc.validate_probe_data(data, require_audio=True)
         self.assertTrue(any("AAC" in e for e in errors))
 
-    def test_files_and_png_signature_checked(self):
+    def test_valid_png_ihdr_and_dimensions_pass(self):
+        self.assertEqual(qc.validate_png_header(valid_png_header()), [])
+
+    def test_png_wrong_dimensions_fail(self):
+        errors = qc.validate_png_header(valid_png_header(width=720, height=1280))
+        self.assertTrue(any("dimensions" in error for error in errors))
+
+    def test_png_bad_ihdr_crc_fails(self):
+        header = bytearray(valid_png_header())
+        header[-1] ^= 0x01
+        self.assertTrue(any("checksum" in error for error in qc.validate_png_header(bytes(header))))
+
+    def test_png_truncated_ihdr_fails(self):
+        self.assertTrue(any("truncated" in error for error in qc.validate_png_header(b"\\x89PNG")))
+
+    def test_png_signature_only_is_rejected(self):
+        header = b"\\x89PNG\\r\\n\\x1a\\n" + b"rest"
+        self.assertTrue(qc.validate_png_header(header))
+
+    def test_files_validate_png_header(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             video = root / "video.mp4"
@@ -73,8 +102,8 @@ class MediaQualityTests(unittest.TestCase):
             video.write_bytes(b"video")
             thumb.write_bytes(b"not a png")
             errors = qc.check_files(video, thumb, valid_probe())
-            self.assertTrue(any("valid PNG" in e for e in errors))
-            thumb.write_bytes(b"\x89PNG\r\n\x1a\nrest")
+            self.assertTrue(any("PNG" in e for e in errors))
+            thumb.write_bytes(valid_png_header() + b"rest")
             self.assertEqual(qc.check_files(video, thumb, valid_probe()), [])
 
 

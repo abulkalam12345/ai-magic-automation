@@ -1,6 +1,8 @@
 import importlib.util
 import tempfile
 import unittest
+import subprocess
+from unittest import mock
 from pathlib import Path
 
 MODULE = Path(__file__).parents[1] / "src" / "media_assembler.py"
@@ -182,6 +184,42 @@ class MediaAssemblerTests(unittest.TestCase):
                 media_assembler.build_ffmpeg_command(
                     root / "missing.mp4", root / "out.mp4", root / "thumb.png"
                 )
+
+
+    def test_ffmpeg_timeout_removes_partial_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output, thumb = root / "out.mp4", root / "thumb.png"
+            output.write_bytes(b"partial")
+            thumb.write_bytes(b"partial")
+            with mock.patch.object(media_assembler.subprocess, "run",
+                                   side_effect=subprocess.TimeoutExpired("ffmpeg", 600)) as run:
+                with self.assertRaisesRegex(RuntimeError, "10-minute"):
+                    media_assembler._execute_ffmpeg(["ffmpeg"], None, [output, thumb])
+            self.assertEqual(run.call_args.kwargs["timeout"], 600)
+            self.assertFalse(output.exists())
+            self.assertFalse(thumb.exists())
+
+    def test_ffmpeg_failure_removes_partial_outputs_and_limits_error_detail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / "out.mp4"
+            output.write_bytes(b"partial")
+            failure = subprocess.CalledProcessError(1, "ffmpeg", stderr="bad media")
+            with mock.patch.object(media_assembler.subprocess, "run", side_effect=failure):
+                with self.assertRaisesRegex(RuntimeError, "bad media"):
+                    media_assembler._execute_ffmpeg(["ffmpeg"], None, [output])
+            self.assertFalse(output.exists())
+
+    def test_ffmpeg_start_error_is_reported_cleanly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "out.mp4"
+            output.write_bytes(b"partial")
+            with mock.patch.object(media_assembler.subprocess, "run",
+                                   side_effect=FileNotFoundError("ffmpeg")):
+                with self.assertRaisesRegex(RuntimeError, "could not be started"):
+                    media_assembler._execute_ffmpeg(["ffmpeg"], None, [output])
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

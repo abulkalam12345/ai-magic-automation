@@ -37,6 +37,10 @@ python src/media_quality_check.py --video output/final.mp4 --thumbnail output/th
 
 Without `--require-audio`, the quality checker preserves its previous video-only acceptance behavior. The audio check confirms stream presence and AAC codec only; it does not judge loudness, music rights, clipping, synchronization, or subjective sound quality.
 
+## Thumbnail integrity checks
+
+The media quality checker validates the PNG signature, 1080x1920 dimensions, IHDR bit-depth/color-type compatibility, compression/filter/interlace fields, chunk framing and order, reserved chunk-type bit, CRCs, required indexed-color palette, IEND placement, and absence of trailing bytes. It reads chunk payloads in bounded blocks rather than loading the complete PNG into memory. This is a structural integrity check; it does not decompress IDAT image pixels or assess visual thumbnail quality. A human must still open and inspect the thumbnail before approval.
+
 ## Timing and quality review
 
 The suggested 10-second structure is:

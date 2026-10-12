@@ -2,6 +2,7 @@ import importlib.util
 import struct
 import tempfile
 import unittest
+from unittest import mock
 import zlib
 from pathlib import Path
 
@@ -167,6 +168,43 @@ class MediaQualityTests(unittest.TestCase):
             path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr_data)
                              + png_chunk(b"IEND", b""))
             self.assertTrue(qc.validate_png_file(path))
+
+
+    def test_inspect_reports_missing_ffprobe_without_raising(self):
+        with mock.patch.object(qc.shutil, "which", return_value=None):
+            errors = qc.inspect(Path("video.mp4"), Path("thumb.png"))
+        self.assertTrue(any("ffprobe is not installed" in error for error in errors))
+
+    def test_inspect_reports_ffprobe_timeout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            video = Path(tmp) / "video.mp4"
+            video.write_bytes(b"video")
+            with mock.patch.object(qc.shutil, "which", return_value="/usr/bin/ffprobe"), \
+                 mock.patch.object(qc.subprocess, "run", side_effect=__import__("subprocess").TimeoutExpired("ffprobe", 30)) as run:
+                errors = qc.inspect(video, Path(tmp) / "thumb.png")
+        self.assertTrue(any("timed out" in error for error in errors))
+        self.assertEqual(run.call_args.kwargs["timeout"], 30)
+
+    def test_inspect_reports_ffprobe_nonzero_exit(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            video = Path(tmp) / "video.mp4"
+            video.write_bytes(b"video")
+            failure = subprocess.CalledProcessError(1, "ffprobe", stderr="invalid container")
+            with mock.patch.object(qc.shutil, "which", return_value="/usr/bin/ffprobe"), \
+                 mock.patch.object(qc.subprocess, "run", side_effect=failure):
+                errors = qc.inspect(video, Path(tmp) / "thumb.png")
+        self.assertTrue(any("invalid container" in error for error in errors))
+
+    def test_inspect_reports_invalid_ffprobe_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            video = Path(tmp) / "video.mp4"
+            video.write_bytes(b"video")
+            completed = __import__("subprocess").CompletedProcess([], 0, stdout="{", stderr="")
+            with mock.patch.object(qc.shutil, "which", return_value="/usr/bin/ffprobe"), \
+                 mock.patch.object(qc.subprocess, "run", return_value=completed):
+                errors = qc.inspect(video, Path(tmp) / "thumb.png")
+        self.assertTrue(any("invalid JSON" in error for error in errors))
 
 
 if __name__ == "__main__":

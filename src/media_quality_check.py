@@ -126,6 +126,22 @@ def validate_png_file(path: Path) -> list[str]:
                         return ["Thumbnail PNG has an invalid bit-depth and color-type combination."]
                     if ihdr_data[10] != 0 or ihdr_data[11] != 0 or ihdr_data[12] not in (0, 1):
                         return ["Thumbnail PNG has unsupported compression, filter, or interlace settings."]
+                    channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[png_color_type]
+                    bits_per_pixel = channels * png_bit_depth
+                    if ihdr_data[12] == 0:
+                        png_expected_bytes = THUMBNAIL_HEIGHT * (
+                            1 + (THUMBNAIL_WIDTH * bits_per_pixel + 7) // 8
+                        )
+                    else:
+                        passes = ((0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8),
+                                  (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2),
+                                  (0, 1, 1, 2))
+                        png_expected_bytes = 0
+                        for x0, y0, dx, dy in passes:
+                            pw = max(0, (THUMBNAIL_WIDTH - x0 + dx - 1) // dx)
+                            ph = max(0, (THUMBNAIL_HEIGHT - y0 + dy - 1) // dy)
+                            if pw and ph:
+                                png_expected_bytes += ph * (1 + (pw * bits_per_pixel + 7) // 8)
                 elif chunk_type == b"IDAT":
                     seen_idat = True
                 elif seen_idat and chunk_type not in (b"IDAT", b"IEND"):

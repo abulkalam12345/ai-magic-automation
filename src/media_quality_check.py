@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_SIGNATURE = b"\\x89PNG\\r\\n\\x1a\\n"
 PNG_IHDR_HEADER_SIZE = 33
 THUMBNAIL_WIDTH = 1080
 THUMBNAIL_HEIGHT = 1920
@@ -44,17 +44,27 @@ def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
                         max_duration: float = 60.0,
                         require_audio: bool = False) -> list[str]:
     errors: list[str] = []
-    streams = data.get("streams", [])
+    if not isinstance(data, dict):
+        return ["ffprobe JSON must contain a top-level object."]
+
+    streams = data.get("streams")
+    if not isinstance(streams, list):
+        errors.append("ffprobe streams must be a list.")
+        streams = []
+    elif any(not isinstance(stream, dict) for stream in streams):
+        errors.append("Every ffprobe stream entry must be an object.")
+        streams = [stream for stream in streams if isinstance(stream, dict)]
+
     video = next((s for s in streams if s.get("codec_type") == "video"), None)
     if video is None:
-        return ["No video stream found."]
-
-    if video.get("codec_name") != "h264":
-        errors.append("Video codec must be H.264.")
-    if (video.get("width"), video.get("height")) != (1080, 1920):
-        errors.append("Video dimensions must be exactly 1080x1920 (vertical 9:16).")
-    if video.get("pix_fmt") != "yuv420p":
-        errors.append("Pixel format must be yuv420p for broad platform compatibility.")
+        errors.append("No video stream found.")
+    else:
+        if video.get("codec_name") != "h264":
+            errors.append("Video codec must be H.264.")
+        if (video.get("width"), video.get("height")) != (1080, 1920):
+            errors.append("Video dimensions must be exactly 1080x1920 (vertical 9:16).")
+        if video.get("pix_fmt") != "yuv420p":
+            errors.append("Pixel format must be yuv420p for broad platform compatibility.")
 
     audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
     if require_audio and audio is None:
@@ -62,8 +72,12 @@ def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
     elif require_audio and audio.get("codec_name") != "aac":
         errors.append("Audio codec must be AAC when audio is required.")
 
+    media_format = data.get("format")
+    if not isinstance(media_format, dict):
+        errors.append("ffprobe format must be an object.")
+        media_format = {}
     try:
-        duration = float(data.get("format", {}).get("duration"))
+        duration = float(media_format.get("duration"))
     except (TypeError, ValueError):
         duration = -1.0
     if not math.isfinite(duration) or duration < min_duration or duration > max_duration:

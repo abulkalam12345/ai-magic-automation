@@ -25,7 +25,7 @@ def valid_png_header(width=1080, height=1920):
     ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
     chunk_type_and_data = b"IHDR" + ihdr_data
     crc = zlib.crc32(chunk_type_and_data) & 0xFFFFFFFF
-    return (b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13)
+    return (b"\\x89PNG\\r\\n\\x1a\\n" + struct.pack(">I", 13)
             + chunk_type_and_data + struct.pack(">I", crc))
 
 
@@ -56,6 +56,31 @@ class MediaQualityTests(unittest.TestCase):
 
     def test_missing_video_stream_fails(self):
         self.assertTrue(qc.validate_probe_data({"streams": [], "format": {}}))
+
+    def test_malformed_top_level_probe_data_fails_cleanly(self):
+        self.assertTrue(any("top-level object" in error
+                            for error in qc.validate_probe_data(["not", "an", "object"])))
+
+    def test_missing_or_wrong_stream_list_fails_cleanly(self):
+        for streams in (None, {}, "video", 3):
+            with self.subTest(streams=streams):
+                errors = qc.validate_probe_data({"streams": streams, "format": {"duration": "10"}})
+                self.assertTrue(any("streams must be a list" in error for error in errors))
+
+    def test_non_object_stream_entry_fails_cleanly(self):
+        errors = qc.validate_probe_data({
+            "streams": [None, {"codec_type": "video", "codec_name": "h264",
+                               "width": 1080, "height": 1920, "pix_fmt": "yuv420p"}],
+            "format": {"duration": "10"},
+        })
+        self.assertTrue(any("stream entry must be an object" in error for error in errors))
+
+    def test_missing_or_wrong_format_object_fails_cleanly(self):
+        for media_format in (None, [], "format"):
+            with self.subTest(media_format=media_format):
+                errors = qc.validate_probe_data({"streams": [], "format": media_format})
+                self.assertTrue(any("format must be an object" in error for error in errors))
+                self.assertTrue(any("finite value" in error for error in errors))
 
     def test_audio_is_optional_by_default(self):
         self.assertEqual(qc.validate_probe_data(valid_probe()), [])
@@ -88,10 +113,10 @@ class MediaQualityTests(unittest.TestCase):
         self.assertTrue(any("checksum" in error for error in qc.validate_png_header(bytes(header))))
 
     def test_png_truncated_ihdr_fails(self):
-        self.assertTrue(any("truncated" in error for error in qc.validate_png_header(b"\x89PNG")))
+        self.assertTrue(any("truncated" in error for error in qc.validate_png_header(b"\\x89PNG")))
 
     def test_png_signature_only_is_rejected(self):
-        header = b"\x89PNG\r\n\x1a\n" + b"rest"
+        header = b"\\x89PNG\\r\\n\\x1a\\n" + b"rest"
         self.assertTrue(qc.validate_png_header(header))
 
     def test_files_validate_png_header(self):

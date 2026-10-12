@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-PNG_SIGNATURE = b"\\x89PNG\\r\\n\\x1a\\n"
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 PNG_IHDR_HEADER_SIZE = 33
 THUMBNAIL_WIDTH = 1080
 THUMBNAIL_HEIGHT = 1920

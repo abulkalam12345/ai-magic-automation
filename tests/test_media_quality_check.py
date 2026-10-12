@@ -207,5 +207,47 @@ class MediaQualityTests(unittest.TestCase):
         self.assertTrue(any("invalid JSON" in error for error in errors))
 
 
+    def test_png_rejects_invalid_ihdr_encoding_fields(self):
+        cases = [
+            (8, 1, 0, 0, 0),
+            (8, 6, 1, 0, 0),
+            (8, 6, 0, 1, 0),
+            (8, 6, 0, 0, 2),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            for bit_depth, color_type, compression, filtering, interlace in cases:
+                with self.subTest(case=(bit_depth, color_type, compression, filtering, interlace)):
+                    ihdr = struct.pack(">IIBBBBB", 1080, 1920, bit_depth, color_type,
+                                       compression, filtering, interlace)
+                    path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr)
+                                     + png_chunk(b"IDAT", b"x") + png_chunk(b"IEND", b""))
+                    self.assertTrue(any("bit-depth" in error or "compression" in error
+                                        for error in qc.validate_png_file(path)))
+
+    def test_png_indexed_color_requires_palette(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            ihdr = struct.pack(">IIBBBBB", 1080, 1920, 8, 3, 0, 0, 0)
+            path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr)
+                             + png_chunk(b"IDAT", b"x") + png_chunk(b"IEND", b""))
+            self.assertTrue(any("PLTE" in error for error in qc.validate_png_file(path)))
+
+    def test_png_rejects_palette_for_grayscale_and_oversized_indexed_palette(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            gray = struct.pack(">IIBBBBB", 1080, 1920, 8, 0, 0, 0, 0)
+            path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", gray)
+                             + png_chunk(b"PLTE", b"\x00\x00\x00")
+                             + png_chunk(b"IDAT", b"x") + png_chunk(b"IEND", b""))
+            self.assertTrue(any("PLTE" in error for error in qc.validate_png_file(path)))
+
+            indexed = struct.pack(">IIBBBBB", 1080, 1920, 1, 3, 0, 0, 0)
+            path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", indexed)
+                             + png_chunk(b"PLTE", b"\x00\x00\x00" * 3)
+                             + png_chunk(b"IDAT", b"x") + png_chunk(b"IEND", b""))
+            self.assertTrue(any("palette" in error for error in qc.validate_png_file(path)))
+
+
 if __name__ == "__main__":
     unittest.main()

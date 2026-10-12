@@ -97,28 +97,43 @@ def _validate_captions(captions: Path | None) -> None:
 
 def build_ffmpeg_command(
     source: Path, output: Path, thumbnail: Path, ffmpeg: str = "ffmpeg",
-    captions: Path | None = None,
+    captions: Path | None = None, audio: Path | None = None,
 ) -> list[str]:
     if not source.is_file():
         raise FileNotFoundError(f"Source video not found: {source}")
     _validate_captions(captions)
+    if audio is not None and not audio.is_file():
+        raise FileNotFoundError(f"Audio file not found: {audio}")
     output.parent.mkdir(parents=True, exist_ok=True)
     thumbnail.parent.mkdir(parents=True, exist_ok=True)
-    return [
-        ffmpeg, "-y", "-i", str(source),
+    command = [ffmpeg, "-y", "-i", str(source)]
+    if audio is not None:
+        command += ["-stream_loop", "-1", "-i", str(audio)]
+    command += [
         "-vf", _video_filter(include_captions=captions is not None), "-t", "60",
         "-c:v", "libx264", "-preset", "medium", "-crf", "23",
         "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        "-an", str(output),
+    ]
+    if audio is None:
+        command += ["-an"]
+    else:
+        command += [
+            "-map", "0:v:0", "-map", "1:a:0",
+            "-af", "volume=0.20,afade=t=out:st=59:d=1",
+            "-c:a", "aac", "-b:a", "192k", "-shortest",
+        ]
+    command += [
+        str(output),
         "-ss", "1", "-i", str(source), "-frames:v", "1",
         "-vf", _video_filter(include_watermark=False, include_captions=captions is not None),
         str(thumbnail),
     ]
+    return command
 
 
 def build_sequence_ffmpeg_command(
     sources: list[Path], output: Path, target_duration: int = 10, ffmpeg: str = "ffmpeg",
-    captions: Path | None = None,
+    captions: Path | None = None, audio: Path | None = None,
 ) -> list[str]:
     """Concatenate 2+ silent clips into an 8–12 second vertical short."""
     if len(sources) < 2:
@@ -129,9 +144,13 @@ def build_sequence_ffmpeg_command(
         if not source.is_file():
             raise FileNotFoundError(f"Source video not found: {source}")
     _validate_captions(captions)
+    if audio is not None and not audio.is_file():
+        raise FileNotFoundError(f"Audio file not found: {audio}")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     inputs = [part for source in sources for part in ("-i", str(source))]
+    if audio is not None:
+        inputs += ["-stream_loop", "-1", "-i", str(audio)]
     chains = []
     labels = []
     for index in range(len(sources)):
@@ -142,14 +161,26 @@ def build_sequence_ffmpeg_command(
         )
         labels.append(f"[{label}]")
     concat = "".join(labels) + f"concat=n={len(sources)}:v=1:a=0,{_video_filter(include_captions=captions is not None)}[final]"
-    filter_complex = ";".join(chains + [concat])
-    return [
+    filter_parts = chains + [concat]
+    if audio is not None:
+        audio_index = len(sources)
+        filter_parts.append(
+            f"[{audio_index}:a]atrim=duration={target_duration},asetpts=PTS-STARTPTS,"
+            f"volume=0.20,afade=t=out:st={target_duration - 1}:d=1[audio]"
+        )
+    filter_complex = ";".join(filter_parts)
+    command = [
         ffmpeg, "-y", *inputs, "-filter_complex", filter_complex,
         "-map", "[final]", "-t", str(target_duration),
         "-c:v", "libx264", "-preset", "medium", "-crf", "23",
         "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        "-an", str(output),
     ]
+    if audio is None:
+        command += ["-an"]
+    else:
+        command += ["-map", "[audio]", "-c:a", "aac", "-b:a", "192k", "-shortest"]
+    command += [str(output)]
+    return command
 
 
 def build_sequence_thumbnail_command(
@@ -183,7 +214,7 @@ def _run_with_captions(captions: Path | None, output: Path, run) -> None:
 
 def assemble_sequence(
     sources: list[Path], output: Path, thumbnail: Path, target_duration: int = 10,
-    captions: Path | None = None,
+    captions: Path | None = None, audio: Path | None = None,
 ) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
@@ -194,7 +225,7 @@ def assemble_sequence(
         resolved_thumbnail = thumbnail.resolve()
         command = build_sequence_ffmpeg_command(
             resolved_sources, resolved_output, target_duration, ffmpeg,
-            (workdir / "captions.srt") if workdir else None,
+            (workdir / "captions.srt") if workdir else None, audio.resolve() if audio else None,
         )
         subprocess.run(command, check=True, cwd=str(workdir) if workdir else None)
         thumb_command = build_sequence_thumbnail_command(
@@ -208,6 +239,7 @@ def assemble_sequence(
 
 def assemble(
     source: Path, output: Path, thumbnail: Path, captions: Path | None = None,
+    audio: Path | None = None,
 ) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
@@ -218,7 +250,7 @@ def assemble(
         resolved_thumbnail = thumbnail.resolve()
         command = build_ffmpeg_command(
             resolved_source, resolved_output, resolved_thumbnail, ffmpeg,
-            (workdir / "captions.srt") if workdir else None,
+            (workdir / "captions.srt") if workdir else None, audio.resolve() if audio else None,
         )
         subprocess.run(command, check=True, cwd=str(workdir) if workdir else None)
 
@@ -233,13 +265,15 @@ def main() -> int:
     parser.add_argument("--thumbnail", required=True, type=Path)
     parser.add_argument("--captions", type=Path,
                         help="Optional UTF-8 SRT file to burn into the video and thumbnail")
+    parser.add_argument("--audio", type=Path,
+                        help="Optional user-supplied, licensed music/audio file; looped and mixed at 20%")
     parser.add_argument("--target-duration", type=int, default=10,
                         help="Sequence target in seconds (8–12; default 10)")
     args = parser.parse_args()
     if len(args.input) == 1:
-        assemble(args.input[0], args.output, args.thumbnail, args.captions)
+        assemble(args.input[0], args.output, args.thumbnail, args.captions, args.audio)
     else:
-        assemble_sequence(args.input, args.output, args.thumbnail, args.target_duration, args.captions)
+        assemble_sequence(args.input, args.output, args.thumbnail, args.target_duration, args.captions, args.audio)
     print(f"Created video: {args.output}")
     print(f"Created thumbnail: {args.thumbnail}")
     return 0

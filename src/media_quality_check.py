@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import subprocess
 from pathlib import Path
@@ -38,8 +39,8 @@ def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
         duration = float(data.get("format", {}).get("duration"))
     except (TypeError, ValueError):
         duration = -1.0
-    if duration < min_duration or duration > max_duration:
-        errors.append(f"Duration must be between {min_duration:g} and {max_duration:g} seconds.")
+    if not math.isfinite(duration) or duration < min_duration or duration > max_duration:
+        errors.append(f"Duration must be a finite value between {min_duration:g} and {max_duration:g} seconds.")
     return errors
 
 

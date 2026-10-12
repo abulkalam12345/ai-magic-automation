@@ -29,6 +29,17 @@ def valid_png_header(width=1080, height=1920):
             + chunk_type_and_data + struct.pack(">I", crc))
 
 
+def png_chunk(kind, data):
+    crc = zlib.crc32(kind + data) & 0xFFFFFFFF
+    return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", crc)
+
+
+def valid_png_file():
+    ihdr_data = struct.pack(">IIBBBBB", 1080, 1920, 8, 6, 0, 0, 0)
+    return (b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr_data)
+            + png_chunk(b"IDAT", b"placeholder") + png_chunk(b"IEND", b""))
+
+
 class MediaQualityTests(unittest.TestCase):
     def test_valid_vertical_export_passes(self):
         self.assertEqual(qc.validate_probe_data(valid_probe()), [])
@@ -128,8 +139,34 @@ class MediaQualityTests(unittest.TestCase):
             thumb.write_bytes(b"not a png")
             errors = qc.check_files(video, thumb, valid_probe())
             self.assertTrue(any("PNG" in e for e in errors))
-            thumb.write_bytes(valid_png_header() + b"rest")
+            thumb.write_bytes(valid_png_file())
             self.assertEqual(qc.check_files(video, thumb, valid_probe()), [])
+            thumb.write_bytes(valid_png_file() + b"trailing")
+            self.assertTrue(any("trailing data" in e
+                                for e in qc.check_files(video, thumb, valid_probe())))
+
+
+    def test_png_file_requires_iend(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            path.write_bytes(valid_png_file()[:-12])
+            self.assertTrue(any("IEND" in error for error in qc.validate_png_file(path)))
+
+    def test_png_file_checks_idat_crc(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            broken = bytearray(valid_png_file())
+            broken[-9] ^= 0x01
+            path.write_bytes(broken)
+            self.assertTrue(any("checksum" in error for error in qc.validate_png_file(path)))
+
+    def test_png_file_rejects_missing_idat(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            ihdr_data = struct.pack(">IIBBBBB", 1080, 1920, 8, 6, 0, 0, 0)
+            path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr_data)
+                             + png_chunk(b"IEND", b""))
+            self.assertTrue(qc.validate_png_file(path))
 
 
 if __name__ == "__main__":

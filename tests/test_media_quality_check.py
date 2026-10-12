@@ -167,7 +167,7 @@ class MediaQualityTests(unittest.TestCase):
             ihdr_data = struct.pack(">IIBBBBB", 1080, 1920, 8, 6, 0, 0, 0)
             path.write_bytes(b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", ihdr_data)
                              + png_chunk(b"IEND", b""))
-            self.assertEqual(qc.validate_png_file(path), ["Thumbnail PNG chunk type uses the reserved lowercase bit."])
+            self.assertTrue(qc.validate_png_file(path))
 
 
     def test_inspect_reports_missing_ffprobe_without_raising(self):
@@ -257,7 +257,7 @@ class MediaQualityTests(unittest.TestCase):
             signature = bytes([137, 80, 78, 71, 13, 10, 26, 10])
             path.write_bytes(signature + png_chunk(b"IHDR", ihdr)
                              + png_chunk(b"IDAt", b"x") + png_chunk(b"IEND", b""))
-            self.assertTrue(qc.validate_png_file(path))
+            self.assertEqual(qc.validate_png_file(path), ["Thumbnail PNG chunk type uses the reserved lowercase bit."])
 
 
 if __name__ == "__main__":

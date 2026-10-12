@@ -17,6 +17,12 @@ SPEC = importlib.util.spec_from_file_location("media_assembler_integration", MOD
 assembler = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(assembler)
 
+QC_SPEC = importlib.util.spec_from_file_location(
+    "media_quality_check_integration", ROOT / "src" / "media_quality_check.py"
+)
+quality_check = importlib.util.module_from_spec(QC_SPEC)
+QC_SPEC.loader.exec_module(quality_check)
+
 FFMPEG = shutil.which("ffmpeg")
 FFPROBE = shutil.which("ffprobe")
 
@@ -68,6 +74,7 @@ class MediaAssemblerIntegrationTests(unittest.TestCase):
         assembler.assemble(source, output, thumbnail, audio=self.audio)
         self.assert_vertical_aac_export(output)
         self.assertEqual(thumbnail.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(quality_check.inspect(output, thumbnail, require_audio=True), [])
 
     def test_sequence_audio_render_and_thumbnail(self):
         first = self.root / "first.mp4"
@@ -81,6 +88,7 @@ class MediaAssemblerIntegrationTests(unittest.TestCase):
         )
         self.assert_vertical_aac_export(output)
         self.assertEqual(thumbnail.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(quality_check.inspect(output, thumbnail, require_audio=True), [])
 
 
 if __name__ == "__main__":

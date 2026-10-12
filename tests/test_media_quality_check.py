@@ -249,5 +249,16 @@ class MediaQualityTests(unittest.TestCase):
             self.assertTrue(any("palette" in error for error in qc.validate_png_file(path)))
 
 
+
+    def test_reserved_chunk_type_bit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "thumb.png"
+            ihdr = struct.pack(">IIBBBBB", 1080, 1920, 8, 6, 0, 0, 0)
+            signature = bytes([137, 80, 78, 71, 13, 10, 26, 10])
+            path.write_bytes(signature + png_chunk(b"IHDR", ihdr)
+                             + png_chunk(b"IDAt", b"x") + png_chunk(b"IEND", b""))
+            self.assertTrue(qc.validate_png_file(path))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -8,9 +8,36 @@ import argparse
 import json
 import math
 import shutil
+import struct
 import subprocess
+import zlib
 from pathlib import Path
 from typing import Any
+
+
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_IHDR_HEADER_SIZE = 33
+THUMBNAIL_WIDTH = 1080
+THUMBNAIL_HEIGHT = 1920
+
+
+def validate_png_header(header: bytes) -> list[str]:
+    """Validate the PNG signature and complete IHDR chunk for a 1080x1920 thumbnail."""
+    if len(header) < PNG_IHDR_HEADER_SIZE:
+        return ["Thumbnail PNG header is truncated."]
+    if header[:8] != PNG_SIGNATURE:
+        return ["Thumbnail must be a PNG file."]
+    if struct.unpack(">I", header[8:12])[0] != 13 or header[12:16] != b"IHDR":
+        return ["Thumbnail must begin with a valid 13-byte IHDR chunk."]
+
+    width, height = struct.unpack(">II", header[16:24])
+    if (width, height) != (THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT):
+        return ["Thumbnail dimensions must be exactly 1080x1920."]
+    expected_crc = zlib.crc32(header[12:29]) & 0xFFFFFFFF
+    actual_crc = struct.unpack(">I", header[29:33])[0]
+    if actual_crc != expected_crc:
+        return ["Thumbnail PNG IHDR checksum is invalid."]
+    return []
 
 
 def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
@@ -51,8 +78,9 @@ def check_files(video_path: Path, thumbnail_path: Path,
         errors.append("Video file is missing or empty.")
     if not thumbnail_path.is_file() or thumbnail_path.stat().st_size == 0:
         errors.append("Thumbnail file is missing or empty.")
-    elif thumbnail_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
-        errors.append("Thumbnail must be a valid PNG file.")
+    else:
+        with thumbnail_path.open("rb") as thumbnail_file:
+            errors.extend(validate_png_header(thumbnail_file.read(PNG_IHDR_HEADER_SIZE)))
     return errors
 
 

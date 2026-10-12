@@ -48,7 +48,11 @@ _SRT_CUE = re.compile(
 def _srt_milliseconds(timestamp: str) -> int:
     hours, minutes, remainder = timestamp.split(":")
     seconds, millis = remainder.split(",")
-    return (((int(hours) * 60 + int(minutes)) * 60) + int(seconds)) * 1000 + int(millis)
+    hours_value, minutes_value = int(hours), int(minutes)
+    seconds_value, millis_value = int(seconds), int(millis)
+    if minutes_value > 59 or seconds_value > 59:
+        raise ValueError("SRT minutes and seconds must be between 00 and 59")
+    return (((hours_value * 60 + minutes_value) * 60) + seconds_value) * 1000 + millis_value
 
 
 def _validate_captions(captions: Path | None) -> None:

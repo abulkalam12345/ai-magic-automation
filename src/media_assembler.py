@@ -200,6 +200,30 @@ def build_sequence_thumbnail_command(
     ]
 
 
+def _execute_ffmpeg(command: list[str], cwd: str | None, outputs: list[Path]) -> None:
+    """Run FFmpeg with a hard timeout and remove incomplete deliverables on failure."""
+    try:
+        subprocess.run(command, check=True, cwd=cwd, timeout=600)
+    except subprocess.TimeoutExpired as exc:
+        for path in outputs:
+            path.unlink(missing_ok=True)
+        raise RuntimeError("FFmpeg exceeded the 10-minute processing limit.") from exc
+    except subprocess.CalledProcessError as exc:
+        for path in outputs:
+            path.unlink(missing_ok=True)
+        detail = (exc.stderr or "").strip() if isinstance(exc.stderr, str) else ""
+        if len(detail) > 500:
+            detail = detail[:500] + "..."
+        message = "FFmpeg failed to assemble the media."
+        if detail:
+            message += f" Details: {detail}"
+        raise RuntimeError(message) from exc
+    except OSError as exc:
+        for path in outputs:
+            path.unlink(missing_ok=True)
+        raise RuntimeError("FFmpeg could not be started; check the FFmpeg installation.") from exc
+
+
 def _run_with_captions(captions: Path | None, output: Path, run) -> None:
     """Run FFmpeg in a temporary safe-named caption directory (no shell parsing)."""
     if captions is None:
@@ -227,12 +251,12 @@ def assemble_sequence(
             resolved_sources, resolved_output, target_duration, ffmpeg,
             (workdir / "captions.srt") if workdir else None, audio.resolve() if audio else None,
         )
-        subprocess.run(command, check=True, cwd=str(workdir) if workdir else None)
+        _execute_ffmpeg(command, str(workdir) if workdir else None, [resolved_output, resolved_thumbnail])
         thumb_command = build_sequence_thumbnail_command(
             resolved_output, resolved_thumbnail, ffmpeg,
             (workdir / "captions.srt") if workdir else None,
         )
-        subprocess.run(thumb_command, check=True, cwd=str(workdir) if workdir else None)
+        _execute_ffmpeg(thumb_command, str(workdir) if workdir else None, [resolved_thumbnail])
 
     _run_with_captions(captions, output, run)
 
@@ -252,7 +276,7 @@ def assemble(
             resolved_source, resolved_output, resolved_thumbnail, ffmpeg,
             (workdir / "captions.srt") if workdir else None, audio.resolve() if audio else None,
         )
-        subprocess.run(command, check=True, cwd=str(workdir) if workdir else None)
+        _execute_ffmpeg(command, str(workdir) if workdir else None, [resolved_output, resolved_thumbnail])
 
     _run_with_captions(captions, output, run)
 

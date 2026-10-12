@@ -29,6 +29,14 @@ The assembler validates UTF-8 SRT structure before rendering: cue numbers must b
 
 You may supply a locally available audio file with `--audio music.mp3` for either single-clip or multi-clip assembly. Only use audio you created or have a license/permission to use on the intended social platforms. The assembler loops the supplied track as needed, mixes it at 20% volume, trims it to the output duration, and fades the final second. No music is downloaded or generated, and no audio provider is contacted. Without `--audio`, the output remains silent as before. Check the final mix and platform music rights manually; this option does not grant a license.
 
+When you include audio, verify the rendered MP4 contains an AAC audio stream:
+
+```bash
+python src/media_quality_check.py --video output/final.mp4 --thumbnail output/thumbnail.png --require-audio
+```
+
+Without `--require-audio`, the quality checker preserves its previous video-only acceptance behavior. The audio check confirms stream presence and AAC codec only; it does not judge loudness, music rights, clipping, synchronization, or subjective sound quality.
+
 ## Timing and quality review
 
 The suggested 10-second structure is:

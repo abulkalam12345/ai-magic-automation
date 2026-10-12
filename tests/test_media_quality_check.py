@@ -156,7 +156,7 @@ class MediaQualityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "thumb.png"
             broken = bytearray(valid_png_file())
-            broken[-9] ^= 0x01
+            broken[-13] ^= 0x01
             path.write_bytes(broken)
             self.assertTrue(any("checksum" in error for error in qc.validate_png_file(path)))
 

@@ -25,6 +25,48 @@ class MediaAssemblerTests(unittest.TestCase):
             self.assertIn("thumb.png", joined)
             self.assertNotIn("subtitles=", joined)
 
+    def test_optional_audio_is_looped_mixed_quietly_and_faded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source, audio = root / "input.mp4", root / "licensed-music.mp3"
+            source.write_bytes(b"placeholder")
+            audio.write_bytes(b"placeholder")
+            command = media_assembler.build_ffmpeg_command(
+                source, root / "out.mp4", root / "thumb.png", audio=audio
+            )
+            joined = " ".join(command)
+            self.assertIn("-stream_loop -1 -i", joined)
+            self.assertIn("volume=0.20,afade=t=out:st=59:d=1", joined)
+            self.assertIn("-c:a aac", joined)
+            self.assertNotIn("-an", command)
+
+    def test_sequence_audio_is_trimmed_and_faded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sources = [root / "a.mp4", root / "b.mp4"]
+            for source in sources:
+                source.write_bytes(b"placeholder")
+            audio = root / "licensed-music.mp3"
+            audio.write_bytes(b"placeholder")
+            command = media_assembler.build_sequence_ffmpeg_command(
+                sources, root / "out.mp4", target_duration=10, audio=audio
+            )
+            graph = command[command.index("-filter_complex") + 1]
+            self.assertIn("[2:a]atrim=duration=10", graph)
+            self.assertIn("volume=0.20,afade=t=out:st=9:d=1[audio]", graph)
+            self.assertIn("-map [audio]", " ".join(command))
+            self.assertNotIn("-an", command)
+
+    def test_missing_audio_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input.mp4"
+            source.write_bytes(b"placeholder")
+            with self.assertRaises(FileNotFoundError):
+                media_assembler.build_ffmpeg_command(
+                    source, root / "out.mp4", root / "thumb.png", audio=root / "missing.mp3"
+                )
+
     def test_optional_valid_srt_is_burned_into_video_and_thumbnail(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

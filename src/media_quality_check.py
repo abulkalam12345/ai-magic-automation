@@ -54,9 +54,6 @@ def validate_png_file(path: Path) -> list[str]:
             seen_iend = False
             png_color_type = None
             png_bit_depth = None
-            png_decompressor = None
-            png_decoded_bytes = 0
-            png_expected_bytes = None
 
             while not seen_iend:
                 chunk_header = stream.read(8)

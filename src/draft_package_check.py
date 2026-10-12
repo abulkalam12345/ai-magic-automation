@@ -63,7 +63,7 @@ def validate_package(package: Path) -> list[str]:
                         if name.startswith("on") or name in {"href", "style"}:
                             errors.append("thumbnail.svg contains an active or external-reference attribute.")
                             break
-                        if "url(" in value.lower() and not re.fullmatch(r"url\\(#[A-Za-z_][A-Za-z0-9_.-]*\\)", value.strip()):
+                        if "url(" in value.lower() and not re.fullmatch(r"url\(#[A-Za-z_][A-Za-z0-9_.-]*\)", value.strip()):
                             errors.append("thumbnail.svg may only use local fragment paint references.")
                             break
                     if errors and errors[-1].startswith("thumbnail.svg"):

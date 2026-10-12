@@ -40,6 +40,82 @@ def validate_png_header(header: bytes) -> list[str]:
     return []
 
 
+
+def validate_png_file(path: Path) -> list[str]:
+    """Check PNG chunk framing, ordering, dimensions, and CRCs without loading the image."""
+    try:
+        with path.open("rb") as stream:
+            if stream.read(8) != PNG_SIGNATURE:
+                return ["Thumbnail must be a PNG file."]
+            seen_ihdr = False
+            seen_plte = False
+            seen_idat = False
+            idat_ended = False
+            seen_iend = False
+
+            while not seen_iend:
+                chunk_header = stream.read(8)
+                if len(chunk_header) != 8:
+                    return ["Thumbnail PNG is truncated before IEND."]
+                length, chunk_type = struct.unpack(">I4s", chunk_header)
+                if length > 0x7FFFFFFF:
+                    return ["Thumbnail PNG chunk length exceeds the PNG limit."]
+                if not all(65 <= byte <= 90 or 97 <= byte <= 122 for byte in chunk_type):
+                    return ["Thumbnail PNG contains an invalid chunk type."]
+                if not seen_ihdr and chunk_type != b"IHDR":
+                    return ["Thumbnail PNG must begin with IHDR."]
+                if chunk_type == b"IHDR":
+                    if seen_ihdr or length != 13:
+                        return ["Thumbnail PNG must contain exactly one 13-byte IHDR first."]
+                elif chunk_type == b"PLTE":
+                    if seen_plte or seen_idat or length == 0 or length % 3 or length > 768:
+                        return ["Thumbnail PNG contains an invalid PLTE chunk."]
+                    seen_plte = True
+                elif chunk_type == b"IDAT":
+                    if idat_ended:
+                        return ["Thumbnail PNG IDAT chunks must be consecutive."]
+                    seen_idat = True
+                elif chunk_type == b"IEND":
+                    if length != 0 or not seen_idat:
+                        return ["Thumbnail PNG IEND is invalid or appears before IDAT."]
+                elif (chunk_type[0] & 0x20) == 0:
+                    return ["Thumbnail PNG contains an unsupported critical chunk."]
+
+                crc = zlib.crc32(chunk_type)
+                remaining = length
+                ihdr_data = bytearray() if chunk_type == b"IHDR" else None
+                while remaining:
+                    block = stream.read(min(65536, remaining))
+                    if not block:
+                        return ["Thumbnail PNG chunk data is truncated."]
+                    crc = zlib.crc32(block, crc)
+                    if ihdr_data is not None:
+                        ihdr_data.extend(block)
+                    remaining -= len(block)
+                crc_bytes = stream.read(4)
+                if len(crc_bytes) != 4:
+                    return ["Thumbnail PNG chunk checksum is truncated."]
+                if struct.unpack(">I", crc_bytes)[0] != (crc & 0xFFFFFFFF):
+                    return ["Thumbnail PNG chunk checksum is invalid."]
+
+                if chunk_type == b"IHDR":
+                    seen_ihdr = True
+                    width, height = struct.unpack(">II", ihdr_data[:8])
+                    if (width, height) != (THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT):
+                        return ["Thumbnail dimensions must be exactly 1080x1920."]
+                elif chunk_type == b"IDAT":
+                    seen_idat = True
+                elif seen_idat and chunk_type not in (b"IDAT", b"IEND"):
+                    idat_ended = True
+                if chunk_type == b"IEND":
+                    seen_iend = True
+
+            if stream.read(1):
+                return ["Thumbnail PNG has trailing data after IEND."]
+    except OSError:
+        return ["Thumbnail PNG could not be read."]
+    return []
+
 def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
                         max_duration: float = 60.0,
                         require_audio: bool = False) -> list[str]:
@@ -93,8 +169,7 @@ def check_files(video_path: Path, thumbnail_path: Path,
     if not thumbnail_path.is_file() or thumbnail_path.stat().st_size == 0:
         errors.append("Thumbnail file is missing or empty.")
     else:
-        with thumbnail_path.open("rb") as thumbnail_file:
-            errors.extend(validate_png_header(thumbnail_file.read(PNG_IHDR_HEADER_SIZE)))
+        errors.extend(validate_png_file(thumbnail_path))
     return errors
 
 

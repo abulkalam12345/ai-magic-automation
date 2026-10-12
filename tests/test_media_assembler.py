@@ -263,5 +263,19 @@ class MediaAssemblerTests(unittest.TestCase):
                 media_assembler.assemble_sequence(sources, root / "same", root / "same")
 
 
+    def test_output_collision_detects_relative_path_aliases(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input.mp4"
+            source.write_bytes(b"placeholder")
+            # The non-existent intermediate directory is normalized by Path.resolve().
+            aliased_source = root / "not-created" / ".." / "input.mp4"
+            with self.assertRaisesRegex(ValueError, "overwrite"):
+                media_assembler.build_ffmpeg_command(
+                    source, aliased_source, root / "thumb.png"
+                )
+
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -13,7 +13,8 @@ from typing import Any
 
 
 def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
-                        max_duration: float = 60.0) -> list[str]:
+                        max_duration: float = 60.0,
+                        require_audio: bool = False) -> list[str]:
     errors: list[str] = []
     streams = data.get("streams", [])
     video = next((s for s in streams if s.get("codec_type") == "video"), None)
@@ -27,6 +28,12 @@ def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
     if video.get("pix_fmt") != "yuv420p":
         errors.append("Pixel format must be yuv420p for broad platform compatibility.")
 
+    audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
+    if require_audio and audio is None:
+        errors.append("An audio stream is required but none was found.")
+    elif require_audio and audio.get("codec_name") != "aac":
+        errors.append("Audio codec must be AAC when audio is required.")
+
     try:
         duration = float(data.get("format", {}).get("duration"))
     except (TypeError, ValueError):
@@ -37,8 +44,8 @@ def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
 
 
 def check_files(video_path: Path, thumbnail_path: Path,
-                probe_data: dict[str, Any]) -> list[str]:
-    errors = validate_probe_data(probe_data)
+                probe_data: dict[str, Any], require_audio: bool = False) -> list[str]:
+    errors = validate_probe_data(probe_data, require_audio=require_audio)
     if not video_path.is_file() or video_path.stat().st_size == 0:
         errors.append("Video file is missing or empty.")
     if not thumbnail_path.is_file() or thumbnail_path.stat().st_size == 0:
@@ -48,7 +55,7 @@ def check_files(video_path: Path, thumbnail_path: Path,
     return errors
 
 
-def inspect(video_path: Path, thumbnail_path: Path) -> list[str]:
+def inspect(video_path: Path, thumbnail_path: Path, require_audio: bool = False) -> list[str]:
     ffprobe = shutil.which("ffprobe")
     if not ffprobe:
         raise RuntimeError("ffprobe is not installed. Install FFmpeg/ffprobe before checking media.")
@@ -63,15 +70,17 @@ def inspect(video_path: Path, thumbnail_path: Path) -> list[str]:
         data = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
         raise ValueError("ffprobe returned invalid JSON.") from exc
-    return check_files(video_path, thumbnail_path, data)
+    return check_files(video_path, thumbnail_path, data, require_audio=require_audio)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--video", required=True, type=Path)
     parser.add_argument("--thumbnail", required=True, type=Path)
+    parser.add_argument("--require-audio", action="store_true",
+                        help="Fail unless an AAC audio stream is present")
     args = parser.parse_args()
-    errors = inspect(args.video, args.thumbnail)
+    errors = inspect(args.video, args.thumbnail, require_audio=args.require_audio)
     if errors:
         print("QUALITY CHECK FAILED")
         for error in errors:

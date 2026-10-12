@@ -176,18 +176,28 @@ def check_files(video_path: Path, thumbnail_path: Path,
 def inspect(video_path: Path, thumbnail_path: Path, require_audio: bool = False) -> list[str]:
     ffprobe = shutil.which("ffprobe")
     if not ffprobe:
-        raise RuntimeError("ffprobe is not installed. Install FFmpeg/ffprobe before checking media.")
+        return ["ffprobe is not installed. Install FFmpeg/ffprobe before checking media."]
     if not video_path.is_file():
         return ["Video file is missing or empty."]
-    result = subprocess.run(
-        [ffprobe, "-v", "error", "-show_streams", "-show_format",
-         "-of", "json", str(video_path)],
-        check=True, capture_output=True, text=True,
-    )
+    try:
+        result = subprocess.run(
+            [ffprobe, "-v", "error", "-show_streams", "-show_format",
+             "-of", "json", str(video_path)],
+            check=True, capture_output=True, text=True, timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return ["ffprobe timed out while inspecting the video (30-second limit)."]
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or "").strip()
+        if len(detail) > 500:
+            detail = detail[:500] + "..."
+        return ["ffprobe could not inspect the video." + (f" Details: {detail}" if detail else "")]
+    except OSError:
+        return ["ffprobe could not be started. Check the FFmpeg installation."]
     try:
         data = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise ValueError("ffprobe returned invalid JSON.") from exc
+    except json.JSONDecodeError:
+        return ["ffprobe returned invalid JSON."]
     return check_files(video_path, thumbnail_path, data, require_audio=require_audio)
 
 

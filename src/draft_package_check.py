@@ -53,15 +53,21 @@ def validate_package(package: Path) -> list[str]:
                     "svg", "defs", "radialGradient", "linearGradient", "stop",
                     "rect", "circle", "text",
                 }
+                allowed_attributes = {
+                    "xmlns", "width", "height", "viewBox", "id", "offset",
+                    "stop-color", "cx", "cy", "r", "fill", "stroke",
+                    "stroke-width", "opacity", "x", "y", "text-anchor",
+                    "font-size", "font-family", "font-weight",
+                }
                 for element in root.iter():
                     tag = element.tag.rsplit("}", 1)[-1] if isinstance(element.tag, str) else ""
                     if tag not in allowed_tags:
                         errors.append(f"thumbnail.svg contains a disallowed element: {tag or 'unknown'}.")
                         break
                     for attribute, value in element.attrib.items():
-                        name = attribute.rsplit("}", 1)[-1].lower()
-                        if name.startswith("on") or name in {"href", "style"}:
-                            errors.append("thumbnail.svg contains an active or external-reference attribute.")
+                        name = attribute.rsplit("}", 1)[-1]
+                        if name not in allowed_attributes:
+                            errors.append(f"thumbnail.svg contains a disallowed attribute: {name}.")
                             break
                         if "url(" in value.lower() and not re.fullmatch(r"url\(#[A-Za-z_][A-Za-z0-9_.-]*\)", value.strip()):
                             errors.append("thumbnail.svg may only use local fragment paint references.")

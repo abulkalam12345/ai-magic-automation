@@ -54,6 +54,9 @@ def validate_png_file(path: Path) -> list[str]:
             seen_iend = False
             png_color_type = None
             png_bit_depth = None
+            png_decompressor = None
+            png_decoded_bytes = 0
+            png_expected_bytes = None
 
             while not seen_iend:
                 chunk_header = stream.read(8)
@@ -80,6 +83,8 @@ def validate_png_file(path: Path) -> list[str]:
                     if idat_ended:
                         return ["Thumbnail PNG IDAT chunks must be consecutive."]
                     seen_idat = True
+                    if png_decompressor is None:
+                        png_decompressor = zlib.decompressobj()
                 elif chunk_type == b"IEND":
                     if length != 0 or not seen_idat:
                         return ["Thumbnail PNG IEND is invalid or appears before IDAT."]

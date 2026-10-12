@@ -232,8 +232,8 @@ class MediaAssemblerTests(unittest.TestCase):
             cases = [
                 (source, root / "thumb.png", None, None),
                 (root / "out.mp4", source, None, None),
-                (root / "out.mp4", root / "thumb.png", captions, None),
-                (root / "out.mp4", root / "thumb.png", None, audio),
+                (captions, root / "thumb.png", captions, None),
+                (root / "out.mp4", audio, None, audio),
                 (root / "same.mp4", root / "same.mp4", None, None),
             ]
             for output, thumbnail, caption_input, audio_input in cases:

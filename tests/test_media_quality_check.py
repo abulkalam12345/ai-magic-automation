@@ -36,6 +36,14 @@ class MediaQualityTests(unittest.TestCase):
         data["format"]["duration"] = "4.2"
         self.assertTrue(any("Duration" in e for e in qc.validate_probe_data(data)))
 
+    def test_non_finite_duration_fails_closed(self):
+        for duration in ("nan", "inf", "-inf"):
+            with self.subTest(duration=duration):
+                data = valid_probe()
+                data["format"]["duration"] = duration
+                errors = qc.validate_probe_data(data)
+                self.assertTrue(any("finite value" in error for error in errors))
+
     def test_missing_video_stream_fails(self):
         self.assertTrue(qc.validate_probe_data({"streams": [], "format": {}}))
 

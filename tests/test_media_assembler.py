@@ -75,6 +75,8 @@ class MediaAssemblerTests(unittest.TestCase):
     def test_invalid_srt_timestamp_or_cue_text_rejected(self):
         invalid_examples = [
             "1\nnot-a-time --> 00:00:02,000\nHello",
+            "1\n00:60:00,000 --> 00:01:02,000\nInvalid minutes",
+            "1\n00:00:00,000 --> 00:00:99,000\nInvalid seconds",
             "1\n00:00:02,000 --> 00:00:01,000\nHello",
             "1\n00:00:00,000 --> 00:00:02,000\n   ",
             "1\n00:00:00,000 --> 00:00:02,000\nHello\n\n3\n00:00:03,000 --> 00:00:04,000\nWorld",

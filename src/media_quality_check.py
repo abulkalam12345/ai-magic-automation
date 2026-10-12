@@ -64,6 +64,8 @@ def validate_png_file(path: Path) -> list[str]:
                     return ["Thumbnail PNG chunk length exceeds the PNG limit."]
                 if not all(65 <= byte <= 90 or 97 <= byte <= 122 for byte in chunk_type):
                     return ["Thumbnail PNG contains an invalid chunk type."]
+                if 97 <= chunk_type[2] <= 122:
+                    return ["Thumbnail PNG chunk type uses the reserved lowercase bit."]
                 if not seen_ihdr and chunk_type != b"IHDR":
                     return ["Thumbnail PNG must begin with IHDR."]
                 if chunk_type == b"IHDR":

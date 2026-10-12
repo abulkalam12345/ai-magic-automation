@@ -39,11 +39,37 @@ def validate_package(package: Path) -> list[str]:
 
     svg_path = package / "thumbnail.svg"
     try:
-        root = ET.parse(svg_path).getroot()
-        if not root.tag.endswith("svg"):
-            errors.append("thumbnail.svg root element must be SVG.")
-    except ET.ParseError:
-        errors.append("thumbnail.svg must be well-formed XML.")
+        svg_text = svg_path.read_text(encoding="utf-8")
+        if len(svg_text.encode("utf-8")) > 2_000_000:
+            errors.append("thumbnail.svg exceeds the 2 MB safety limit.")
+        elif "<!DOCTYPE" in svg_text.upper() or "<!ENTITY" in svg_text.upper():
+            errors.append("thumbnail.svg must not contain a DOCTYPE or entity declaration.")
+        else:
+            root = ET.fromstring(svg_text)
+            if not root.tag.endswith("svg"):
+                errors.append("thumbnail.svg root element must be SVG.")
+            else:
+                allowed_tags = {
+                    "svg", "defs", "radialGradient", "linearGradient", "stop",
+                    "rect", "circle", "text",
+                }
+                for element in root.iter():
+                    tag = element.tag.rsplit("}", 1)[-1] if isinstance(element.tag, str) else ""
+                    if tag not in allowed_tags:
+                        errors.append(f"thumbnail.svg contains a disallowed element: {tag or 'unknown'}.")
+                        break
+                    for attribute, value in element.attrib.items():
+                        name = attribute.rsplit("}", 1)[-1].lower()
+                        if name.startswith("on") or name in {"href", "style"}:
+                            errors.append("thumbnail.svg contains an active or external-reference attribute.")
+                            break
+                        if "url(" in value.lower() and not re.fullmatch(r"url\\(#[A-Za-z_][A-Za-z0-9_.-]*\\)", value.strip()):
+                            errors.append("thumbnail.svg may only use local fragment paint references.")
+                            break
+                    if errors and errors[-1].startswith("thumbnail.svg"):
+                        break
+    except (ET.ParseError, UnicodeDecodeError):
+        errors.append("thumbnail.svg must be valid UTF-8, well-formed XML.")
 
     required_fields = (
         "id", "channel", "date", "slot", "status", "topic", "title",

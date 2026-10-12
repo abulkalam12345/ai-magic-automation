@@ -39,6 +39,24 @@ class MediaQualityTests(unittest.TestCase):
     def test_missing_video_stream_fails(self):
         self.assertTrue(qc.validate_probe_data({"streams": [], "format": {}}))
 
+    def test_audio_is_optional_by_default(self):
+        self.assertEqual(qc.validate_probe_data(valid_probe()), [])
+
+    def test_required_audio_missing_fails(self):
+        errors = qc.validate_probe_data(valid_probe(), require_audio=True)
+        self.assertTrue(any("audio stream is required" in e for e in errors))
+
+    def test_required_aac_audio_passes(self):
+        data = valid_probe()
+        data["streams"].append({"codec_type": "audio", "codec_name": "aac"})
+        self.assertEqual(qc.validate_probe_data(data, require_audio=True), [])
+
+    def test_required_non_aac_audio_fails(self):
+        data = valid_probe()
+        data["streams"].append({"codec_type": "audio", "codec_name": "mp3"})
+        errors = qc.validate_probe_data(data, require_audio=True)
+        self.assertTrue(any("AAC" in e for e in errors))
+
     def test_files_and_png_signature_checked(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

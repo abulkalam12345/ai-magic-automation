@@ -25,6 +25,10 @@ python src/media_assembler.py --input clip-a.mp4 clip-b.mp4 --output output/fina
 
 The assembler validates UTF-8 SRT structure before rendering: cue numbers must be sequential, timestamps must be valid (minutes and seconds are 00–59), each cue must contain text, end times must follow start times, and cues must be chronological and non-overlapping. The SRT is copied into a temporary directory under a safe fixed filename, avoiding filter-path parsing problems. The temporary copy is removed after rendering; retain the original editable SRT separately.
 
+## Optional audio
+
+You may supply a locally available audio file with `--audio music.mp3` for either single-clip or multi-clip assembly. Only use audio you created or have a license/permission to use on the intended social platforms. The assembler loops the supplied track as needed, mixes it at 20% volume, trims it to the output duration, and fades the final second. No music is downloaded or generated, and no audio provider is contacted. Without `--audio`, the output remains silent as before. Check the final mix and platform music rights manually; this option does not grant a license.
+
 ## Timing and quality review
 
 The suggested 10-second structure is:

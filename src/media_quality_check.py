@@ -52,6 +52,8 @@ def validate_png_file(path: Path) -> list[str]:
             seen_idat = False
             idat_ended = False
             seen_iend = False
+            png_color_type = None
+            png_bit_depth = None
 
             while not seen_iend:
                 chunk_header = stream.read(8)
@@ -68,8 +70,11 @@ def validate_png_file(path: Path) -> list[str]:
                     if seen_ihdr or length != 13:
                         return ["Thumbnail PNG must contain exactly one 13-byte IHDR first."]
                 elif chunk_type == b"PLTE":
-                    if seen_plte or seen_idat or length == 0 or length % 3 or length > 768:
+                    if (seen_plte or seen_idat or length == 0 or length % 3 or length > 768
+                            or png_color_type in (0, 4)):
                         return ["Thumbnail PNG contains an invalid PLTE chunk."]
+                    if png_color_type == 3 and png_bit_depth is not None and length // 3 > 2 ** png_bit_depth:
+                        return ["Thumbnail PNG palette has more entries than its bit depth allows."]
                     seen_plte = True
                 elif chunk_type == b"IDAT":
                     if idat_ended:
@@ -103,6 +108,19 @@ def validate_png_file(path: Path) -> list[str]:
                     width, height = struct.unpack(">II", ihdr_data[:8])
                     if (width, height) != (THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT):
                         return ["Thumbnail dimensions must be exactly 1080x1920."]
+                    png_bit_depth = ihdr_data[8]
+                    png_color_type = ihdr_data[9]
+                    valid_depths = {
+                        0: (1, 2, 4, 8, 16),
+                        2: (8, 16),
+                        3: (1, 2, 4, 8),
+                        4: (8, 16),
+                        6: (8, 16),
+                    }
+                    if png_color_type not in valid_depths or png_bit_depth not in valid_depths[png_color_type]:
+                        return ["Thumbnail PNG has an invalid bit-depth and color-type combination."]
+                    if ihdr_data[10] != 0 or ihdr_data[11] != 0 or ihdr_data[12] not in (0, 1):
+                        return ["Thumbnail PNG has unsupported compression, filter, or interlace settings."]
                 elif chunk_type == b"IDAT":
                     seen_idat = True
                 elif seen_idat and chunk_type not in (b"IDAT", b"IEND"):
@@ -110,6 +128,8 @@ def validate_png_file(path: Path) -> list[str]:
                 if chunk_type == b"IEND":
                     seen_iend = True
 
+            if png_color_type == 3 and not seen_plte:
+                return ["Thumbnail PNG indexed-color images must contain a PLTE chunk."]
             if stream.read(1):
                 return ["Thumbnail PNG has trailing data after IEND."]
     except OSError:

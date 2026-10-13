@@ -55,7 +55,7 @@ jobs:
           fi
       - name: Build script, SEO metadata and thumbnail draft
         run: |
-          python src/content_factory.py --slot "${{ steps.slot.outputs.value }}" --date "$(date -u +%F)"
+          python src/content_factory.py --slot "${{ steps.slot.outputs.value }}" --date "$(TZ=Asia/Kathmandu date +%F)"
       - name: Validate every generated draft package
         shell: bash
         run: |

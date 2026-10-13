@@ -71,6 +71,23 @@ class StoryPackageCheckTests(unittest.TestCase):
             errors = checker.validate_story_package(root)
             self.assertTrue(any("missing section" in error for error in errors))
 
+    def test_rejects_noncanonical_date_and_mismatched_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            metadata = self.make_package(root)
+            metadata["date"] = "2026-2-12"
+            (root / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
+            errors = checker.validate_story_package(root)
+            self.assertTrue(any("canonical ISO" in error for error in errors))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            metadata = self.make_package(root)
+            metadata["id"] = "2026-10-12-morning-research-../../outside"
+            (root / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
+            errors = checker.validate_story_package(root)
+            self.assertTrue(any("canonical date, slot, and topic slug" in error for error in errors))
+
     def test_rejects_non_object_metadata(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

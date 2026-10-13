@@ -83,6 +83,9 @@ def validate_package(package: Path) -> list[str]:
                                 break
                             ids.add(value)
                         if "url(" in value.lower():
+                            if name not in {"fill", "stroke"}:
+                                errors.append("thumbnail.svg local paint references are only allowed in fill or stroke.")
+                                break
                             match = re.fullmatch(r"url\(#([A-Za-z_][A-Za-z0-9_.-]*)\)", value.strip())
                             if not match:
                                 errors.append("thumbnail.svg may only use local fragment paint references.")

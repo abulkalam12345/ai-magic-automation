@@ -150,6 +150,16 @@ class DraftPackageCheckTests(unittest.TestCase):
                 self.assertTrue(any("namespace" in error or "1080x1920" in error
                                     for error in checker.validate_package(package)))
 
+    def test_svg_local_paint_reference_is_rejected_in_non_paint_attribute(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            package = self.make_package(Path(tmp))
+            (package / "thumbnail.svg").write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><text font-family="url(#font)">x</text></svg>',
+                encoding="utf-8",
+            )
+            errors = checker.validate_package(package)
+            self.assertTrue(any("only allowed in fill or stroke" in error for error in errors))
+
     def test_svg_duplicate_ids_and_dangling_paint_refs_are_rejected(self):
         unsafe_svgs = [
             '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><defs><linearGradient id="same"/><linearGradient id="same"/></defs></svg>',

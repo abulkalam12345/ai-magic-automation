@@ -54,6 +54,26 @@ class DraftPackageCheckTests(unittest.TestCase):
             (package / "thumbnail.svg").unlink()
             self.assertTrue(any("thumbnail.svg" in e for e in checker.validate_package(package)))
 
+    def test_metadata_date_must_be_valid_iso_date(self):
+        for invalid_date in ("2026-02-30", "13-10-2026", "2026-1-3"):
+            with self.subTest(date=invalid_date), tempfile.TemporaryDirectory() as tmp:
+                package = self.make_package(Path(tmp))
+                data = self.read_metadata(package)
+                data["date"] = invalid_date
+                self.write_metadata(package, data)
+                self.assertTrue(any("valid YYYY-MM-DD" in error
+                                    for error in checker.validate_package(package)))
+
+    def test_draft_id_must_match_date_and_slot_prefix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            package = self.make_package(Path(tmp))
+            data = self.read_metadata(package)
+            data["id"] = "2026-10-13-evening-wrong-slot"
+            self.write_metadata(package, data)
+            self.assertTrue(any("Draft ID must begin" in error
+                                for error in checker.validate_package(package)))
+
+
     def test_video_must_not_be_claimed_as_generated(self):
         with tempfile.TemporaryDirectory() as tmp:
             package = self.make_package(Path(tmp))

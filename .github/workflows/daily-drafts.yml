@@ -69,15 +69,20 @@ jobs:
           for metadata in "${packages[@]}"; do
             python src/draft_package_check.py "$(dirname "$metadata")"
           done
+      - name: Optional attributed RSS research (disabled until sources are approved)
+        run: python src/scheduled_research.py
       - name: Save updated topic history
         uses: actions/cache/save@v4
         with:
           path: output/used_topics.json
           key: wondervexa-topic-history-${{ github.run_id }}
-      - name: Save draft package
+      - name: Save draft packages
         uses: actions/upload-artifact@v4
         with:
           name: wondervexa-${{ steps.slot.outputs.value }}-${{ github.run_id }}
-          path: output/drafts/
+          path: |
+            output/drafts/
+            output/research-stories/
+            output/trend-research/
           if-no-files-found: error
           retention-days: 14

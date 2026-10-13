@@ -10,7 +10,7 @@ Twice per day (06:15 and 18:15 Asia/Kathmandu), GitHub Actions runs the offline 
 
 Before artifact upload, `src/draft_package_check.py` checks that each package has its required files, parseable metadata and SVG, matching topic/script, valid hashtags, an explicit evergreen/unverified trend label, no claimed rendered video, and publishing disabled with per-video approval required. This is an integrity and safety gate, not a visual review.
 
-The workflow uses a small curated idea bank and attempts to restore/save a cross-run topic-history cache using GitHub Actions cache. Cache retention and eviction are controlled by GitHub, so this is best-effort duplicate avoidance, not a permanent ledger or a guarantee of uniqueness. It does not have live trend research, an AI language model, image/video generation, or FFmpeg rendering. Suggestions are explicitly labeled as unverified evergreen seeds, never live trends.
+The workflow uses a small curated idea bank and attempts to restore/save a cross-run topic-history cache using GitHub Actions cache. The local history file is replaced atomically, so an interrupted write cannot leave a truncated JSON history file. Cache retention and eviction are controlled by GitHub, so this is best-effort duplicate avoidance, not a permanent ledger or a guarantee of uniqueness. It does not have live trend research, an AI language model, image/video generation, or FFmpeg rendering. Suggestions are explicitly labeled as unverified evergreen seeds, never live trends.
 
 ## Safety and cost
 - No external AI or video-generation API is called.

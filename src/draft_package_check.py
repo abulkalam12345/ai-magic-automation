@@ -46,8 +46,13 @@ def validate_package(package: Path) -> list[str]:
             errors.append("thumbnail.svg must not contain a DOCTYPE or entity declaration.")
         else:
             root = ET.fromstring(svg_text)
-            if not root.tag.endswith("svg"):
-                errors.append("thumbnail.svg root element must be SVG.")
+            svg_namespace = "http://www.w3.org/2000/svg"
+            if root.tag != f"{{{svg_namespace}}}svg":
+                errors.append("thumbnail.svg root must use the official SVG namespace.")
+            elif (root.attrib.get("width") != "1080"
+                  or root.attrib.get("height") != "1920"
+                  or root.attrib.get("viewBox") != "0 0 1080 1920"):
+                errors.append("thumbnail.svg must use the 1080x1920 portrait canvas.")
             else:
                 allowed_tags = {
                     "svg", "defs", "radialGradient", "linearGradient", "stop",
@@ -59,21 +64,34 @@ def validate_package(package: Path) -> list[str]:
                     "stroke-width", "opacity", "x", "y", "text-anchor",
                     "font-size", "font-family", "font-weight",
                 }
+                ids: set[str] = set()
+                references: list[str] = []
                 for element in root.iter():
                     tag = element.tag.rsplit("}", 1)[-1] if isinstance(element.tag, str) else ""
-                    if tag not in allowed_tags:
-                        errors.append(f"thumbnail.svg contains a disallowed element: {tag or 'unknown'}.")
+                    if (tag not in allowed_tags or not isinstance(element.tag, str)
+                            or not element.tag.startswith(f"{{{svg_namespace}}}")):
+                        errors.append(f"thumbnail.svg contains a disallowed element or namespace: {tag or 'unknown'}.")
                         break
                     for attribute, value in element.attrib.items():
                         name = attribute.rsplit("}", 1)[-1]
                         if name not in allowed_attributes:
                             errors.append(f"thumbnail.svg contains a disallowed attribute: {name}.")
                             break
-                        if "url(" in value.lower() and not re.fullmatch(r"url\(#[A-Za-z_][A-Za-z0-9_.-]*\)", value.strip()):
-                            errors.append("thumbnail.svg may only use local fragment paint references.")
-                            break
+                        if name == "id":
+                            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", value) or value in ids:
+                                errors.append("thumbnail.svg IDs must be valid and unique.")
+                                break
+                            ids.add(value)
+                        if "url(" in value.lower():
+                            match = re.fullmatch(r"url\\(#([A-Za-z_][A-Za-z0-9_.-]*)\\)", value.strip())
+                            if not match:
+                                errors.append("thumbnail.svg may only use local fragment paint references.")
+                                break
+                            references.append(match.group(1))
                     if errors and errors[-1].startswith("thumbnail.svg"):
                         break
+                if not errors and any(reference not in ids for reference in references):
+                    errors.append("thumbnail.svg references an undefined local paint ID.")
     except (ET.ParseError, UnicodeDecodeError):
         errors.append("thumbnail.svg must be valid UTF-8, well-formed XML.")
 

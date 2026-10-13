@@ -138,6 +138,31 @@ class DraftPackageCheckTests(unittest.TestCase):
                                     for error in checker.validate_package(package)))
 
 
+    def test_svg_requires_exact_namespace_and_portrait_canvas(self):
+        unsafe_svgs = [
+            '<svg xmlns="http://www.w3.org/2000/svgx" width="1080" height="1920" viewBox="0 0 1080 1920"/>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"/>',
+        ]
+        for unsafe_svg in unsafe_svgs:
+            with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:
+                package = self.make_package(Path(tmp))
+                (package / "thumbnail.svg").write_text(unsafe_svg, encoding="utf-8")
+                self.assertTrue(any("namespace" in error or "1080x1920" in error
+                                    for error in checker.validate_package(package)))
+
+    def test_svg_duplicate_ids_and_dangling_paint_refs_are_rejected(self):
+        unsafe_svgs = [
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><defs><linearGradient id="same"/><linearGradient id="same"/></defs></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><rect fill="url(#missing)"/></svg>',
+        ]
+        for unsafe_svg in unsafe_svgs:
+            with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:
+                package = self.make_package(Path(tmp))
+                (package / "thumbnail.svg").write_text(unsafe_svg, encoding="utf-8")
+                errors = checker.validate_package(package)
+                self.assertTrue(any("IDs must be valid and unique" in error
+                                    or "undefined local paint ID" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

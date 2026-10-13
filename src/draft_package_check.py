@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from datetime import date
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
@@ -128,12 +129,14 @@ def validate_package(package: Path) -> list[str]:
     date_value = metadata["date"]
     if isinstance(date_value, str):
         try:
-            parsed_date = __import__("datetime").date.fromisoformat(date_value)
+            parsed_date = date.fromisoformat(date_value)
             if parsed_date.isoformat() != date_value:
                 raise ValueError("date must use canonical YYYY-MM-DD format")
-            expected_prefix = f"{date_value}-{metadata['slot']}-"
-            if isinstance(metadata["id"], str) and not metadata["id"].startswith(expected_prefix):
-                errors.append("Draft ID must begin with its date and slot.")
+            topic_value = metadata.get("topic")
+            if isinstance(topic_value, str) and topic_value.strip():
+                expected_id = f"{date_value}-{metadata['slot']}-{re.sub(r'[^a-z0-9]+', '-', topic_value.lower()).strip('-')}"
+                if metadata["id"] != expected_id:
+                    errors.append("Draft ID must exactly match its date, slot, and topic.")
         except ValueError:
             errors.append("Metadata date must be a valid YYYY-MM-DD date.")
     if metadata["thumbnail"] != "thumbnail.svg":

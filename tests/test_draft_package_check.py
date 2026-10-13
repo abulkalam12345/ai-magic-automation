@@ -150,6 +150,19 @@ class DraftPackageCheckTests(unittest.TestCase):
                 self.assertTrue(any("namespace" in error or "1080x1920" in error
                                     for error in checker.validate_package(package)))
 
+    def test_svg_namespaced_paint_attributes_are_rejected(self):
+        unsafe_svgs = [
+            '<svg xmlns="http://www.w3.org/2000/svg" xmlns:evil="urn:evil" width="1080" height="1920" viewBox="0 0 1080 1920" evil:fill="url(#paint)"/>',
+            '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1920" viewBox="0 0 1080 1920"><rect xlink:fill="url(#paint)"/></svg>',
+        ]
+        for unsafe_svg in unsafe_svgs:
+            with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:
+                package = self.make_package(Path(tmp))
+                (package / "thumbnail.svg").write_text(unsafe_svg, encoding="utf-8")
+                errors = checker.validate_package(package)
+                self.assertTrue(any("namespaced attributes" in error for error in errors))
+
+
     def test_svg_local_paint_reference_is_rejected_in_non_paint_attribute(self):
         with tempfile.TemporaryDirectory() as tmp:
             package = self.make_package(Path(tmp))

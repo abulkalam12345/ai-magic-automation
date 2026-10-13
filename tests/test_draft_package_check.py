@@ -94,7 +94,7 @@ class DraftPackageCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             package = self.make_package(Path(tmp))
             (package / "thumbnail.svg").write_text(
-                '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+                '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><script>alert(1)</script></svg>',
                 encoding="utf-8",
             )
             self.assertTrue(any("disallowed element" in error
@@ -102,9 +102,9 @@ class DraftPackageCheckTests(unittest.TestCase):
 
     def test_svg_event_and_external_reference_attributes_are_rejected(self):
         unsafe_svgs = [
-            '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>',
-            '<svg xmlns="http://www.w3.org/2000/svg"><text href="https://evil.example">x</text></svg>',
-            '<svg xmlns="http://www.w3.org/2000/svg"><rect fill="url(https://evil.example/a.svg#x)"/></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" onload="alert(1)"/>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><text href="https://evil.example">x</text></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><rect fill="url(https://evil.example/a.svg#x)"/></svg>',
         ]
         for unsafe_svg in unsafe_svgs:
             with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:
@@ -127,8 +127,8 @@ class DraftPackageCheckTests(unittest.TestCase):
 
     def test_svg_unapproved_attributes_are_rejected(self):
         unsafe_svgs = [
-            '<svg xmlns="http://www.w3.org/2000/svg" xml:base="https://evil.example/"/>',
-            '<svg xmlns="http://www.w3.org/2000/svg"><rect filter="url(#remote)"/></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" xml:base="https://evil.example/"/>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><rect filter="url(#remote)"/></svg>',
         ]
         for unsafe_svg in unsafe_svgs:
             with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:

@@ -9,7 +9,9 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import re
+import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -30,6 +32,26 @@ IDEAS = [
 
 def slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+def _atomic_write_text(path: Path, content: str) -> None:
+    """Replace a text file atomically so interruption cannot truncate its prior contents."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", newline="\\n",
+            dir=path.parent, prefix=f".{path.name}.", suffix=".tmp", delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_path, path)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def choose_idea(day: date, slot: str, history: list[str]) -> tuple[str, str, str, str]:
@@ -116,8 +138,7 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
 </svg>'''
     (out / "thumbnail.svg").write_text(svg, encoding="utf-8")
     history.append(title)
-    history_file.parent.mkdir(parents=True, exist_ok=True)
-    history_file.write_text(json.dumps(history, indent=2), encoding="utf-8")
+    _atomic_write_text(history_file, json.dumps(history, indent=2) + "\\n")
     return out
 
 

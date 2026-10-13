@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import urllib.parse
+from datetime import date
 from pathlib import Path
 
 REQUIRED_SECTIONS = (
@@ -47,6 +49,23 @@ def validate_story_package(package_dir: Path) -> list[str]:
         value = metadata.get(field)
         if not isinstance(value, str) or not value.strip():
             errors.append(f"metadata field '{field}' must be a non-empty string.")
+    parsed_day = None
+    if isinstance(metadata.get("date"), str):
+        try:
+            parsed_day = date.fromisoformat(metadata["date"])
+            if parsed_day.isoformat() != metadata["date"]:
+                parsed_day = None
+        except ValueError:
+            parsed_day = None
+    if parsed_day is None:
+        errors.append("date must be a canonical ISO YYYY-MM-DD date.")
+    topic = metadata.get("topic")
+    slot = metadata.get("slot")
+    if parsed_day is not None and isinstance(topic, str) and topic.strip() and slot in {"morning", "evening"}:
+        slug = re.sub(r"[^a-z0-9]+", "-", topic.lower()).strip("-")[:48] or "research-story"
+        expected_id = f"{parsed_day.isoformat()}-{slot}-research-{slug}"
+        if metadata.get("id") != expected_id:
+            errors.append("id must match the canonical date, slot, and topic slug.")
     if metadata.get("channel") != "WonderVexa":
         errors.append("channel must be WonderVexa.")
     if metadata.get("status") != "draft":
@@ -70,7 +89,7 @@ def validate_story_package(package_dir: Path) -> list[str]:
             errors.append("explicit per-video approval must be required.")
     if not isinstance(metadata.get("research_signal_score"), (int, float)) or isinstance(metadata.get("research_signal_score"), bool):
         errors.append("research_signal_score must be numeric.")
-    elif not __import__("math").isfinite(metadata["research_signal_score"]):
+    elif not math.isfinite(metadata["research_signal_score"]):
         errors.append("research_signal_score must be finite.")
     for section in REQUIRED_SECTIONS:
         if section not in story:

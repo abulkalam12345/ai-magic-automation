@@ -93,5 +93,36 @@ class StoryGeneratorTests(unittest.TestCase):
                 generator.generate(source, Path(tmp) / "out", date(2026, 10, 12), "morning")
 
 
+    def test_existing_story_package_is_never_overwritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            payload = {
+                "status": "research_signals_only_not_verified_social_trends",
+                "items": [signal()],
+            }
+            source = root / "signals.json"
+            source.write_text(json.dumps(payload), encoding="utf-8")
+            output = root / "out"
+            package = output / "2026-10-12-morning-research-ocean-cleanup-innovation"
+            package.mkdir(parents=True)
+            sentinel = package / "keep.txt"
+            sentinel.write_text("preserve", encoding="utf-8")
+            with self.assertRaises(FileExistsError):
+                generator.generate(source, output, date(2026, 10, 12), "morning")
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve")
+
+    def test_story_package_is_published_as_complete_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "signals.json"
+            source.write_text(json.dumps({
+                "status": "research_signals_only_not_verified_social_trends",
+                "items": [signal()],
+            }), encoding="utf-8")
+            package = generator.generate(source, root / "out", date(2026, 10, 12), "morning")
+            self.assertEqual({p.name for p in package.iterdir()}, {"story.md", "metadata.json"})
+            self.assertFalse(any(p.name.startswith(".story-package-") for p in package.parent.iterdir()))
+
+
 if __name__ == "__main__":
     unittest.main()

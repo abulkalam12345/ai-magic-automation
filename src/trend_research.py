@@ -75,7 +75,7 @@ def parse_feed(xml_bytes: bytes, source_name: str, source_url: str, fetched_at: 
     """Parse common RSS 2.0 or Atom entries into attributed research signals."""
     # ElementTree does not resolve external entities, but internal DTD entities can
     # still cause expansion attacks. Feeds do not need DTDs, so reject them outright.
-    if re.search(rb"<!\\s*(?:DOCTYPE|ENTITY)\\b", xml_bytes, re.IGNORECASE):
+    if re.search(rb"<!\s*(?:DOCTYPE|ENTITY)\b", xml_bytes, re.IGNORECASE):
         raise ValueError(f"DTD and entity declarations are not allowed in feeds from {source_name}.")
     try:
         root = ET.fromstring(xml_bytes)

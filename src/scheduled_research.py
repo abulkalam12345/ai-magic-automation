@@ -1,6 +1,7 @@
 """Optional, disabled-by-default RSS research stage for scheduled draft runs."""
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
@@ -22,18 +23,24 @@ def load_config() -> dict:
     feeds = config.get("feeds")
     if not isinstance(feeds, list):
         raise ValueError("Trend feed config feeds must be a list.")
-    if not isinstance(config.get("max_age_hours", 72), int) or isinstance(config.get("max_age_hours", 72), bool) or config.get("max_age_hours", 72) <= 0:
+    age = config.get("max_age_hours", 72)
+    if not isinstance(age, int) or isinstance(age, bool) or age <= 0:
         raise ValueError("max_age_hours must be a positive integer.")
     for feed in feeds:
         if not isinstance(feed, dict) or not isinstance(feed.get("name"), str) or not feed["name"].strip() or not isinstance(feed.get("url"), str):
             raise ValueError("Each feed must contain a non-empty name and URL.")
-        # Fetcher enforces HTTPS, host-safe redirects, size and timeout limits.
         if not feed["url"].startswith("https://"):
             raise ValueError("Every configured feed URL must use HTTPS.")
     return config
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--slot", choices=("morning", "evening"), default="morning")
+    args = parser.parse_args()
+    # Ensure artifact paths exist even while the feature is safely disabled.
+    SIGNALS.parent.mkdir(parents=True, exist_ok=True)
+    STORIES.mkdir(parents=True, exist_ok=True)
     config = load_config()
     if not config["enabled"]:
         print("RSS research skipped: config/trend_feeds.json is disabled.")
@@ -57,24 +64,24 @@ def main() -> int:
         print(f"RSS research failed with exit code {result.returncode}; scheduled draft run will fail closed.")
         return result.returncode
 
-    for slot in ("morning", "evening"):
-        result = subprocess.run([
-            sys.executable, str(ROOT / "src" / "story_generator.py"),
-            "--signals", str(SIGNALS), "--slot", slot,
-            "--output", str(STORIES),
-        ], cwd=ROOT, check=False)
-        if result.returncode != 0:
-            return result.returncode
-        package = STORIES / next(
-            path.name for path in STORIES.glob(f"*-{slot}-research-*")
-            if (path / "metadata.json").is_file()
-        )
-        result = subprocess.run([
-            sys.executable, str(ROOT / "src" / "story_package_check.py"), str(package)
-        ], cwd=ROOT, check=False)
-        if result.returncode != 0:
-            return result.returncode
-    print("Research-only story briefs created and validated; no video or publishing action occurred.")
+    existing = {path.resolve() for path in STORIES.iterdir() if path.is_dir()}
+    result = subprocess.run([
+        sys.executable, str(ROOT / "src" / "story_generator.py"),
+        "--signals", str(SIGNALS), "--slot", args.slot,
+        "--output", str(STORIES),
+    ], cwd=ROOT, check=False)
+    if result.returncode != 0:
+        return result.returncode
+    created = [path for path in STORIES.iterdir() if path.is_dir() and path.resolve() not in existing]
+    if len(created) != 1:
+        print("Expected exactly one new research story package; refusing ambiguous validation.")
+        return 1
+    result = subprocess.run([
+        sys.executable, str(ROOT / "src" / "story_package_check.py"), str(created[0])
+    ], cwd=ROOT, check=False)
+    if result.returncode != 0:
+        return result.returncode
+    print("One research-only story brief created and validated; no video or publishing action occurred.")
     return 0
 
 

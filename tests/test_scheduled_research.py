@@ -16,7 +16,7 @@ class ScheduledResearchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "feeds.json"
             config_path.write_text(json.dumps({"enabled": False, "feeds": []}), encoding="utf-8")
-            with patch.object(research, "CONFIG", config_path), patch.object(research.subprocess, "run") as run:
+            with patch.object(research, "CONFIG", config_path), patch.object(research, "SIGNALS", Path(tmp) / "out" / "signals.json"), patch.object(research, "STORIES", Path(tmp) / "out" / "stories"), patch.object(research.subprocess, "run") as run, patch.object(research.sys, "argv", ["scheduled_research.py"]):
                 self.assertEqual(research.main(), 0)
                 run.assert_not_called()
 
@@ -24,7 +24,7 @@ class ScheduledResearchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "feeds.json"
             config_path.write_text(json.dumps({"enabled": True, "feeds": []}), encoding="utf-8")
-            with patch.object(research, "CONFIG", config_path), patch.object(research.subprocess, "run") as run:
+            with patch.object(research, "CONFIG", config_path), patch.object(research, "SIGNALS", Path(tmp) / "out" / "signals.json"), patch.object(research, "STORIES", Path(tmp) / "out" / "stories"), patch.object(research.subprocess, "run") as run, patch.object(research.sys, "argv", ["scheduled_research.py"]):
                 self.assertEqual(research.main(), 0)
                 run.assert_not_called()
 
@@ -32,9 +32,9 @@ class ScheduledResearchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "feeds.json"
             config_path.write_text(json.dumps({"enabled": True, "feeds": [{"name": "bad", "url": "http://example.org/feed"}]}), encoding="utf-8")
-            with patch.object(research, "CONFIG", config_path):
+            with patch.object(research, "CONFIG", config_path), patch.object(research.SIGNALS.parent, "mkdir", create=True):
                 with self.assertRaisesRegex(ValueError, "HTTPS"):
-                    research.main()
+                    research.load_config()
 
     def test_rejects_invalid_age(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -42,7 +42,7 @@ class ScheduledResearchTests(unittest.TestCase):
             config_path.write_text(json.dumps({"enabled": True, "feeds": [], "max_age_hours": 0}), encoding="utf-8")
             with patch.object(research, "CONFIG", config_path):
                 with self.assertRaisesRegex(ValueError, "positive"):
-                    research.main()
+                    research.load_config()
 
 
 if __name__ == "__main__":

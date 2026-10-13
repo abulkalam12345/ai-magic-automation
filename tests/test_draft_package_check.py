@@ -80,6 +80,16 @@ class DraftPackageCheckTests(unittest.TestCase):
                                     for error in checker.validate_package(package)))
 
 
+    def test_topic_must_produce_a_nonempty_safe_slug(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            package = self.make_package(Path(tmp))
+            data = self.read_metadata(package)
+            data["topic"] = "✨ !!!"
+            self.write_metadata(package, data)
+            errors = checker.validate_package(package)
+            self.assertTrue(any("at least one ASCII letter or digit" in error
+                                for error in errors))
+
     def test_video_must_not_be_claimed_as_generated(self):
         with tempfile.TemporaryDirectory() as tmp:
             package = self.make_package(Path(tmp))

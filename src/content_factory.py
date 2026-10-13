@@ -138,7 +138,7 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
 </svg>'''
     (out / "thumbnail.svg").write_text(svg, encoding="utf-8")
     history.append(title)
-    _atomic_write_text(history_file, json.dumps(history, indent=2) + "\\n")
+    _atomic_write_text(history_file, json.dumps(history, indent=2) + "\n")
     return out
 
 

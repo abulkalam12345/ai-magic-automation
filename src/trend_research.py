@@ -73,6 +73,10 @@ def _link(item: ET.Element, atom: bool) -> str:
 
 def parse_feed(xml_bytes: bytes, source_name: str, source_url: str, fetched_at: datetime | None = None) -> list[dict]:
     """Parse common RSS 2.0 or Atom entries into attributed research signals."""
+    # ElementTree does not resolve external entities, but internal DTD entities can
+    # still cause expansion attacks. Feeds do not need DTDs, so reject them outright.
+    if re.search(rb"<!\\s*(?:DOCTYPE|ENTITY)\\b", xml_bytes, re.IGNORECASE):
+        raise ValueError(f"DTD and entity declarations are not allowed in feeds from {source_name}.")
     try:
         root = ET.fromstring(xml_bytes)
     except ET.ParseError as exc:
@@ -113,26 +117,38 @@ class _SameHostHTTPSRedirect(urllib.request.HTTPRedirectHandler):
     """Reject redirects before urllib makes a request to the destination host."""
     def __init__(self, original_host: str):
         super().__init__()
-        self.original_host = original_host
+        self.original_host = original_host.lower()
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        target = urllib.parse.urlparse(newurl)
-        if target.scheme != "https" or target.hostname != self.original_host:
+        try:
+            target = urllib.parse.urlparse(newurl)
+            target_host = target.hostname.lower() if target.hostname else ""
+            _target_port = target.port
+        except ValueError:
+            target_host = ""
+            target = urllib.parse.urlparse("")
+        if target.scheme != "https" or target_host != self.original_host or target.username or target.password:
             raise ValueError("Feed redirect to a different host or non-HTTPS URL was blocked.")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def fetch_feed(source_name: str, source_url: str, timeout: int = DEFAULT_TIMEOUT_SECONDS) -> list[dict]:
     """Fetch one explicitly configured HTTPS feed; bound response size and redirects."""
-    parsed = urllib.parse.urlparse(source_url)
-    if parsed.scheme != "https" or not parsed.hostname:
-        raise ValueError("Feed URL must use HTTPS.")
+    try:
+        parsed = urllib.parse.urlparse(source_url)
+        host = parsed.hostname.lower() if parsed.hostname else ""
+        _port = parsed.port
+    except (TypeError, ValueError):
+        raise ValueError("Feed URL must be a valid absolute HTTPS URL.") from None
+    if parsed.scheme != "https" or not host or parsed.username or parsed.password:
+        raise ValueError("Feed URL must use HTTPS and must not contain embedded credentials.")
     request = urllib.request.Request(source_url, headers={"User-Agent": USER_AGENT, "Accept": "application/atom+xml, application/rss+xml, application/xml, text/xml"})
     try:
-        opener = urllib.request.build_opener(_SameHostHTTPSRedirect(parsed.hostname))
+        opener = urllib.request.build_opener(_SameHostHTTPSRedirect(host))
         with opener.open(request, timeout=timeout) as response:
             final = urllib.parse.urlparse(response.geturl())
-            if final.scheme != "https" or final.hostname != parsed.hostname:
+            final_host = final.hostname.lower() if final.hostname else ""
+            if final.scheme != "https" or final_host != host or final.username or final.password:
                 raise ValueError("Feed redirect to a different host or non-HTTPS URL was blocked.")
             payload = response.read(MAX_FEED_BYTES + 1)
     except (urllib.error.URLError, TimeoutError) as exc:

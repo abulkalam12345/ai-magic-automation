@@ -9,6 +9,8 @@ import argparse
 import json
 import math
 import re
+import shutil
+import tempfile
 import urllib.parse
 from datetime import date
 from pathlib import Path
@@ -134,10 +136,24 @@ def generate(signals_path: Path, output_dir: Path, day: date, slot: str) -> Path
         raise ValueError("No research signals are available.")
     candidates.sort(key=lambda item: item["research_signal_score"], reverse=True)
     script, metadata = build_story_brief(candidates[0], day, slot)
+    output_dir.mkdir(parents=True, exist_ok=True)
     destination = output_dir / metadata["id"]
-    destination.mkdir(parents=True, exist_ok=True)
-    (destination / "story.md").write_text(script, encoding="utf-8")
-    (destination / "metadata.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if destination.exists():
+        raise FileExistsError(f"Refusing to overwrite existing story package: {destination}")
+    staging = Path(tempfile.mkdtemp(prefix=".story-package-", dir=output_dir))
+    try:
+        (staging / "story.md").write_text(script, encoding="utf-8")
+        (staging / "metadata.json").write_text(
+            json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        # Publish the complete package directory in one same-filesystem rename.
+        # A consumer sees either no package or both complete files, never a half-write.
+        if destination.exists():
+            raise FileExistsError(f"Refusing to overwrite existing story package: {destination}")
+        staging.rename(destination)
+    except BaseException:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
     return destination
 
 

@@ -125,6 +125,17 @@ def validate_package(package: Path) -> list[str]:
         errors.append("Package status must remain draft.")
     if metadata["slot"] not in ("morning", "evening"):
         errors.append("Slot must be morning or evening.")
+    date_value = metadata["date"]
+    if isinstance(date_value, str):
+        try:
+            parsed_date = __import__("datetime").date.fromisoformat(date_value)
+            if parsed_date.isoformat() != date_value:
+                raise ValueError("date must use canonical YYYY-MM-DD format")
+            expected_prefix = f"{date_value}-{metadata['slot']}-"
+            if isinstance(metadata["id"], str) and not metadata["id"].startswith(expected_prefix):
+                errors.append("Draft ID must begin with its date and slot.")
+        except ValueError:
+            errors.append("Metadata date must be a valid YYYY-MM-DD date.")
     if metadata["thumbnail"] != "thumbnail.svg":
         errors.append("Thumbnail metadata must point to thumbnail.svg.")
     if metadata.get("video") is not None:

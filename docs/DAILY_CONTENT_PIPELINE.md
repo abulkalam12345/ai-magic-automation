@@ -18,6 +18,7 @@ The workflow uses a small curated idea bank and attempts to restore/save a cross
 - No video is rendered or uploaded.
 - Publishing remains disabled and every final video requires explicit user approval.
 - GitHub Actions workflow uses read-only contents permission and checkout does not persist its token credentials.
+- The scheduled draft job has a 10-minute execution limit to bound runner usage if a step stalls.
 - GitHub scheduled workflows are best-effort; GitHub may delay or skip scheduled runs, and public-repository schedules can be disabled after inactivity.
 
 ## Next integrations (blocked until verified)

@@ -41,7 +41,7 @@ class ContentFactoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             history = root / "history.json"
-            original = '["Previously used topic"]\\n'
+            original = '["Previously used topic"]\n'
             history.write_text(original, encoding="utf-8")
             with patch.object(factory.os, "replace", side_effect=OSError("simulated replace failure")):
                 with self.assertRaisesRegex(OSError, "simulated"):

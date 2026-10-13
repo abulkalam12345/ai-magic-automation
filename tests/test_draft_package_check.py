@@ -64,14 +64,20 @@ class DraftPackageCheckTests(unittest.TestCase):
                 self.assertTrue(any("valid YYYY-MM-DD" in error
                                     for error in checker.validate_package(package)))
 
-    def test_draft_id_must_match_date_and_slot_prefix(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            package = self.make_package(Path(tmp))
-            data = self.read_metadata(package)
-            data["id"] = "2026-10-13-evening-wrong-slot"
-            self.write_metadata(package, data)
-            self.assertTrue(any("Draft ID must begin" in error
-                                for error in checker.validate_package(package)))
+    def test_draft_id_must_exactly_match_date_slot_and_topic(self):
+        invalid_ids = (
+            "2026-10-13-evening-wrong-slot",
+            "2026-10-13-morning-unrelated-topic",
+            "../2026-10-13-morning-moonlit-seed",
+        )
+        for invalid_id in invalid_ids:
+            with self.subTest(draft_id=invalid_id), tempfile.TemporaryDirectory() as tmp:
+                package = self.make_package(Path(tmp))
+                data = self.read_metadata(package)
+                data["id"] = invalid_id
+                self.write_metadata(package, data)
+                self.assertTrue(any("exactly match" in error
+                                    for error in checker.validate_package(package)))
 
 
     def test_video_must_not_be_claimed_as_generated(self):

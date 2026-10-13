@@ -70,7 +70,7 @@ jobs:
             python src/draft_package_check.py "$(dirname "$metadata")"
           done
       - name: Optional attributed RSS research (disabled until sources are approved)
-        run: python src/scheduled_research.py
+        run: python src/scheduled_research.py --slot "${{ steps.slot.outputs.value }}"
       - name: Save updated topic history
         uses: actions/cache/save@v4
         with:

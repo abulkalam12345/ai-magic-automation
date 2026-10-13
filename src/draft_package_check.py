@@ -134,9 +134,13 @@ def validate_package(package: Path) -> list[str]:
                 raise ValueError("date must use canonical YYYY-MM-DD format")
             topic_value = metadata.get("topic")
             if isinstance(topic_value, str) and topic_value.strip():
-                expected_id = f"{date_value}-{metadata['slot']}-{re.sub(r'[^a-z0-9]+', '-', topic_value.lower()).strip('-')}"
-                if metadata["id"] != expected_id:
-                    errors.append("Draft ID must exactly match its date, slot, and topic.")
+                topic_slug = re.sub(r"[^a-z0-9]+", "-", topic_value.lower()).strip("-")
+                if not topic_slug:
+                    errors.append("Metadata topic must contain at least one ASCII letter or digit.")
+                else:
+                    expected_id = f"{date_value}-{metadata['slot']}-{topic_slug}"
+                    if metadata["id"] != expected_id:
+                        errors.append("Draft ID must exactly match its date, slot, and topic.")
         except ValueError:
             errors.append("Metadata date must be a valid YYYY-MM-DD date.")
     if metadata["thumbnail"] != "thumbnail.svg":

@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "max_age_hours": 72,
+  "feeds": [],
+  "notes": "Disabled by default. Add only reviewed public HTTPS RSS/Atom feeds after confirming publisher terms, stability, update frequency, and attribution requirements. No feed is approved by this template."
+}

@@ -73,7 +73,13 @@ def validate_package(package: Path) -> list[str]:
                         errors.append(f"thumbnail.svg contains a disallowed element or namespace: {tag or 'unknown'}.")
                         break
                     for attribute, value in element.attrib.items():
-                        name = attribute.rsplit("}", 1)[-1]
+                        # ElementTree expands namespaced attributes to {namespace}local.
+                        # Do not strip that namespace: a namespaced fill could otherwise
+                        # pass the allowlist intended only for unqualified SVG attributes.
+                        if "}" in attribute or ":" in attribute:
+                            errors.append("thumbnail.svg must not contain namespaced attributes.")
+                            break
+                        name = attribute
                         if name not in allowed_attributes:
                             errors.append(f"thumbnail.svg contains a disallowed attribute: {name}.")
                             break

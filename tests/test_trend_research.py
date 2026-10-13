@@ -45,9 +45,23 @@ class TrendResearchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid feed XML"):
             trend.parse_feed(b"<rss>", "Bad", "https://example.org")
 
+    def test_rejects_dtd_and_entity_declarations(self):
+        payloads = (
+            b'<!DOCTYPE rss [<!ENTITY x "expanded">]><rss><channel/></rss>',
+            b'<!ENTITY x "expanded"><rss><channel/></rss>',
+        )
+        for payload in payloads:
+            with self.subTest(payload=payload), self.assertRaisesRegex(ValueError, "DTD and entity"):
+                trend.parse_feed(payload, "Untrusted", "https://example.org/feed")
+
     def test_rejects_non_https_feed(self):
         with self.assertRaisesRegex(ValueError, "HTTPS"):
             trend.fetch_feed("bad", "http://example.org/feed")
+
+    def test_rejects_feed_urls_with_credentials_or_invalid_authority(self):
+        for url in ("https://user:pass@example.org/feed", "https://[broken/feed"):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                trend.fetch_feed("bad", url)
 
     def test_redirect_policy_rejects_cross_host_and_http_before_following(self):
         handler = trend._SameHostHTTPSRedirect("example.org")
@@ -56,6 +70,8 @@ class TrendResearchTests(unittest.TestCase):
             handler.redirect_request(request, None, 302, "Found", {}, "https://evil.example/feed")
         with self.assertRaisesRegex(ValueError, "redirect"):
             handler.redirect_request(request, None, 302, "Found", {}, "http://example.org/feed")
+        with self.assertRaisesRegex(ValueError, "redirect"):
+            handler.redirect_request(request, None, 302, "Found", {}, "https://user:pass@example.org/feed")
 
     def test_rss_summary_whitespace_is_normalized(self):
         xml = b"""<rss><channel><item><title>Test</title><link>https://example.org/x</link><pubDate>Sun, 11 Oct 2026 08:00:00 GMT</pubDate><description>line one&#10;   line two</description></item></channel></rss>"""

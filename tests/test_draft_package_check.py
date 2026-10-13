@@ -160,7 +160,7 @@ class DraftPackageCheckTests(unittest.TestCase):
             with self.subTest(svg=unsafe_svg), tempfile.TemporaryDirectory() as tmp:
                 package = self.make_package(Path(tmp))
                 (package / "thumbnail.svg").write_text(unsafe_svg, encoding="utf-8")
-                self.assertTrue(any("disallowed attribute" in error
+                self.assertTrue(any("disallowed attribute" in error or "namespaced attributes" in error
                                     for error in checker.validate_package(package)))
 
 

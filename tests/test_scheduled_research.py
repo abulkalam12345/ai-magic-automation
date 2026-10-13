@@ -32,7 +32,7 @@ class ScheduledResearchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "feeds.json"
             config_path.write_text(json.dumps({"enabled": True, "feeds": [{"name": "bad", "url": "http://example.org/feed"}]}), encoding="utf-8")
-            with patch.object(research, "CONFIG", config_path), patch.object(research.SIGNALS.parent, "mkdir", create=True):
+            with patch.object(research, "CONFIG", config_path):
                 with self.assertRaisesRegex(ValueError, "HTTPS"):
                     research.load_config()
 

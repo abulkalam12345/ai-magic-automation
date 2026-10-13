@@ -3,6 +3,7 @@ import json
 import xml.etree.ElementTree as ET
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import date
 from pathlib import Path
 
@@ -35,6 +36,20 @@ class ContentFactoryTests(unittest.TestCase):
             second = factory.build_package(date(2026, 10, 12), "evening", root / "drafts", history)
             second_topic = json.loads((second / "metadata.json").read_text())["topic"]
             self.assertNotEqual(first_topic, second_topic)
+
+    def test_history_update_is_atomic_and_preserves_previous_file_on_replace_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            history = root / "history.json"
+            original = '["Previously used topic"]\\n'
+            history.write_text(original, encoding="utf-8")
+            with patch.object(factory.os, "replace", side_effect=OSError("simulated replace failure")):
+                with self.assertRaisesRegex(OSError, "simulated"):
+                    factory.build_package(
+                        date(2026, 10, 12), "morning", root / "drafts", history
+                    )
+            self.assertEqual(history.read_text(encoding="utf-8"), original)
+            self.assertEqual(list(root.glob(".history.json.*.tmp")), [])
 
     def test_invalid_history_shape_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

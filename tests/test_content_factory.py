@@ -65,5 +65,37 @@ class ContentFactoryTests(unittest.TestCase):
                 factory.build_package(date(2026, 10, 12), "night", Path(tmp), Path(tmp) / "history.json")
 
 
+
+    def test_morning_and_evening_packages_pass_the_full_draft_gate(self):
+        checker_path = Path(__file__).parents[1] / "src" / "draft_package_check.py"
+        checker_spec = importlib.util.spec_from_file_location("draft_package_check", checker_path)
+        checker = importlib.util.module_from_spec(checker_spec)
+        checker_spec.loader.exec_module(checker)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            history = root / "history.json"
+            morning = factory.build_package(
+                date(2026, 10, 13), "morning", root / "drafts", history
+            )
+            evening = factory.build_package(
+                date(2026, 10, 13), "evening", root / "drafts", history
+            )
+
+            self.assertNotEqual(morning, evening)
+            self.assertEqual(checker.validate_package(morning), [])
+            self.assertEqual(checker.validate_package(evening), [])
+
+            morning_metadata = json.loads((morning / "metadata.json").read_text(encoding="utf-8"))
+            evening_metadata = json.loads((evening / "metadata.json").read_text(encoding="utf-8"))
+            self.assertEqual(morning_metadata["slot"], "morning")
+            self.assertEqual(evening_metadata["slot"], "evening")
+            self.assertNotEqual(morning_metadata["topic"], evening_metadata["topic"])
+            for metadata in (morning_metadata, evening_metadata):
+                self.assertEqual(metadata["status"], "draft")
+                self.assertFalse(metadata["publishing"]["enabled"])
+                self.assertIsNone(metadata.get("video"))
+
+
 if __name__ == "__main__":
     unittest.main()

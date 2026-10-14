@@ -139,7 +139,7 @@ def validate_png_file(path: Path) -> list[str]:
     return []
 
 def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
-                        max_duration: float = 60.0,
+                        max_duration: float = 12.0,
                         require_audio: bool = False) -> list[str]:
     errors: list[str] = []
     if not isinstance(data, dict):
@@ -163,6 +163,14 @@ def validate_probe_data(data: dict[str, Any], min_duration: float = 8.0,
             errors.append("Video dimensions must be exactly 1080x1920 (vertical 9:16).")
         if video.get("pix_fmt") != "yuv420p":
             errors.append("Pixel format must be yuv420p for broad platform compatibility.")
+        try:
+            rate_text = video.get("avg_frame_rate", video.get("r_frame_rate"))
+            numerator, denominator = str(rate_text).split("/", 1)
+            frame_rate = float(numerator) / float(denominator)
+        except (AttributeError, TypeError, ValueError, ZeroDivisionError):
+            frame_rate = -1.0
+        if not math.isfinite(frame_rate) or not 24.0 <= frame_rate <= 60.0:
+            errors.append("Video frame rate must be a finite value between 24 and 60 fps.")
 
     audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
     if require_audio and audio is None:

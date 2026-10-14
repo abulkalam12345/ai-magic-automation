@@ -6,7 +6,7 @@
 
 ## Creative premise
 
-A single wilted bluebell-like flower stands in a quiet, moonlit garden. A soft blue-and-gold magical ring appears around it. The flower slowly regains its color and opens into a luminous bloom. The magic is gentle and readable; the flower remains the same plant throughout.
+One single delicate wilted bluebell-like flower stands in a quiet, moonlit garden. A soft blue-and-gold magical ring appears around it. The flower slowly regains its color and opens into a luminous bloom. The magic is gentle and readable; the flower remains the same plant throughout.
 
 ## Timed storyboard
 

@@ -120,3 +120,9 @@ class TrendResearchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class ParseTimestampBoundaryTests(unittest.TestCase):
+    def test_rejects_empty_and_unicode_malformed_timestamps(self):
+        for value in (None, "", "\u2003", "2026-10-11T08:00:00☃"):
+            with self.subTest(value=value):
+                self.assertIsNone(trend.parse_timestamp(value))

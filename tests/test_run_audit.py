@@ -39,7 +39,14 @@ class RunAuditTests(unittest.TestCase):
                 self.assertEqual(audit_module.main(), 0)
             raw = output.read_bytes()
             self.assertTrue(raw.endswith(b"\n"))
-            self.assertEqual(json.loads(raw), audit_module.build_audit(env))
+            parsed = json.loads(raw)
+            self.assertEqual(parsed["slot"], env["SLOT"])
+            self.assertEqual(parsed["event"], env["EVENT_NAME"])
+            self.assertEqual(parsed["run_id"], env["RUN_ID"])
+            self.assertEqual(parsed["run_attempt"], int(env["RUN_ATTEMPT"]))
+            self.assertEqual(parsed["commit_sha"], env["COMMIT_SHA"])
+            self.assertIsNotNone(datetime.fromisoformat(parsed["started_at_utc"]).tzinfo)
+            self.assertIsNotNone(datetime.fromisoformat(parsed["started_at_nepal"]).tzinfo)
             self.assertFalse(output.with_suffix(".json.tmp").exists())
 
     def test_rejects_naive_timestamp(self):

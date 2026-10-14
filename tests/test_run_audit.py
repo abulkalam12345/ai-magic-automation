@@ -1,5 +1,9 @@
 import importlib.util
+import json
+import os
+import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -26,6 +30,17 @@ class RunAuditTests(unittest.TestCase):
     def test_rejects_missing_run_identity(self):
         with self.assertRaisesRegex(ValueError,"RUN_ID"):
             audit_module.build_audit({**self.env,"RUN_ID":""})
+
+    def test_cli_writes_parseable_json_with_final_newline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "audit.json"
+            env = {**self.env}
+            with patch.dict(os.environ, env, clear=True), patch.object(audit_module.sys, "argv", ["run_audit.py", "--output", str(output)]):
+                self.assertEqual(audit_module.main(), 0)
+            raw = output.read_bytes()
+            self.assertTrue(raw.endswith(b"\n"))
+            self.assertEqual(json.loads(raw), audit_module.build_audit(env))
+            self.assertFalse(output.with_suffix(".json.tmp").exists())
 
     def test_rejects_naive_timestamp(self):
         with self.assertRaisesRegex(ValueError,"timezone-aware"):

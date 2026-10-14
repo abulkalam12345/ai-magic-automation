@@ -54,6 +54,39 @@ jobs:
           else
             echo "value=evening" >> "$GITHUB_OUTPUT"
           fi
+      - name: Record execution audit
+        env:
+          SLOT: ${{ steps.slot.outputs.value }}
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p output/drafts
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+
+          now = datetime.now(timezone.utc)
+          audit = {
+              "slot": os.environ["SLOT"],
+              "event": os.environ["EVENT_NAME"],
+              "schedule_cron": os.environ.get("SCHEDULE") or None,
+              "started_at_utc": now.isoformat(),
+              "started_at_nepal": now.astimezone(ZoneInfo("Asia/Kathmandu")).isoformat(),
+              "run_id": os.environ["RUN_ID"],
+              "run_attempt": int(os.environ["RUN_ATTEMPT"]),
+              "commit_sha": os.environ["COMMIT_SHA"],
+              "note": "GitHub scheduled events may be delayed or dropped; this records actual start time, not a guaranteed execution time."
+          }
+          with open("output/drafts/_run-audit.json", "w", encoding="utf-8") as f:
+              json.dump(audit, f, ensure_ascii=False, indent=2)
+              f.write("\\n")
+          print(json.dumps(audit, ensure_ascii=False))
+          PY
       - name: Build script, SEO metadata and thumbnail draft
         run: |
           python src/content_factory.py --slot "${{ steps.slot.outputs.value }}" --date "$(TZ=Asia/Kathmandu date +%F)"

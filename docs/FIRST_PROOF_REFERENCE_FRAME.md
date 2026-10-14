@@ -43,4 +43,6 @@ Create an original cinematic fantasy macro still in vertical 9:16. Show exactly 
 
 ## Operational limits
 
+Do not enter payment details, enable paid APIs, or use paid fallback services for this zero-budget project.
+
 This document records a visual specification only. It does not embed or claim to store the generated reference image, create video, establish a provider license, or authorize API use. Keep generation and publishing disabled until their respective approval gates pass.

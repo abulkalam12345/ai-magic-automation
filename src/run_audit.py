@@ -1,6 +1,6 @@
 """Write a timestamped audit record for one draft workflow execution."""
 from __future__ import annotations
-import argparse, json, os
+import argparse, json, os, sys
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo

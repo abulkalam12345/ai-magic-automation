@@ -49,4 +49,4 @@ Multiple flowers, extra stems, changing flower species, duplicated petals, defor
 
 ## Current limitations
 
-This storyboard is a creative specification, not a generated video or a claim that a free provider is available. The project currently has no approved video-generation provider. Do not enter payment details, enable paid APIs, or publish from this document.
+This storyboard is a creative specification, not a generated video or a claim that a free provider is available. No provider has passed the project's zero-cost, licensing, privacy, quota, and output requirements; the project currently has no approved video-generation provider. Do not enter payment details, enable paid APIs, or publish from this document.

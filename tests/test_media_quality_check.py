@@ -17,6 +17,7 @@ def valid_probe():
         "streams": [{
             "codec_type": "video", "codec_name": "h264",
             "width": 1080, "height": 1920, "pix_fmt": "yuv420p",
+            "avg_frame_rate": "30/1",
         }],
         "format": {"duration": "10.0"},
     }
@@ -54,9 +55,25 @@ class MediaQualityTests(unittest.TestCase):
         self.assertTrue(any("H.264" in e for e in errors))
 
     def test_duration_out_of_range_fails(self):
-        data = valid_probe()
-        data["format"]["duration"] = "4.2"
-        self.assertTrue(any("Duration" in e for e in qc.validate_probe_data(data)))
+        for duration in ("4.2", "12.01", "60"):
+            with self.subTest(duration=duration):
+                data = valid_probe()
+                data["format"]["duration"] = duration
+                self.assertTrue(any("Duration" in e for e in qc.validate_probe_data(data)))
+
+    def test_duration_boundaries_8_and_12_seconds_pass(self):
+        for duration in ("8", "12"):
+            with self.subTest(duration=duration):
+                data = valid_probe()
+                data["format"]["duration"] = duration
+                self.assertEqual(qc.validate_probe_data(data), [])
+
+    def test_invalid_or_out_of_range_frame_rate_fails(self):
+        for rate in ("0/0", "15/1", "61/1", "unknown"):
+            with self.subTest(rate=rate):
+                data = valid_probe()
+                data["streams"][0]["avg_frame_rate"] = rate
+                self.assertTrue(any("frame rate" in error for error in qc.validate_probe_data(data)))
 
     def test_non_finite_duration_fails_closed(self):
         for duration in ("nan", "inf", "-inf"):

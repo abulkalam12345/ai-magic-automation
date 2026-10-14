@@ -6,16 +6,16 @@
 
 This plan is designed for a provider that can make short 2–6 second clips. It does not assume a provider is free or approved. Check current provider cost, license, duration, aspect ratio, and quota before any generation. Do not generate until the user approves the specific test.
 
-## Continuity anchor
+## Continuity anchor and handoff
 
-Create or select one still reference frame showing:
-- one single bluebell-like flower in a small patch of dark garden soil;
-- bent green stem and folded blue-violet petals;
-- moonlit garden bokeh, dark uncluttered background;
-- camera at macro flower height, vertical composition;
-- no people, hands, text, logos, or watermark.
+Use two distinct reference roles; do not confuse them:
 
-Use the exact same reference image, aspect ratio (9:16), style preset, and camera framing for both clips when the provider supports reference input. If it cannot reuse the same reference or otherwise preserve the scene, expect continuity drift and reject mismatched clips rather than hiding it with fast cuts.
+1. **Identity reference:** the wilted-flower still establishes the flower, soil, moonlit background, palette, camera height, and framing. Supply it to Clip A and, if supported, Clip B as an additional identity/style reference.
+2. **Handoff frame:** after Clip A is generated, extract its actual final frame. Use that exact frame as Clip B's image-to-video starting frame or first-frame condition. This is the strongest practical bridge between two separately generated clips.
+
+The identity still alone is not Clip B's start frame: it depicts the original wilted state, while Clip A ends with the magic beginning to gather. If the provider cannot condition Clip B on Clip A's actual final frame (or an equivalent supported continuation feature), mark continuity as unproven and reject a visibly mismatched join. Never claim two independent clips are one continuous generation.
+
+Keep the same 9:16 ratio, model/version, style preset, seed where supported, camera framing, and identity reference across both clips. A matching prompt alone does not guarantee continuity.
 
 ## Clip A — wilted flower and first magic cue
 
@@ -29,21 +29,27 @@ Create a vertical 9:16 cinematic macro video of exactly one delicate wilted blue
 
 Multiple flowers, extra stems, duplicated petals, changing species, hands, people, faces, fast camera movement, jump cuts, flower opening, sudden color change, chaotic particles, explosions, fire, excessive glow, flicker, text, logos, signatures, baked-in watermark, borders, landscape framing, malformed plant anatomy.
 
-**Expected end frame:** same wilted flower, with a faint blue-gold glow near its stem.
+**Expected end frame:** the same wilted flower; the stem remains bent and petals remain closed, with a faint blue-gold glow gathered near the stem. Save this exact generated frame for the Clip B handoff.
 
 ## Clip B — continuous restoration and final reveal
 
 **Target duration:** 4–6 seconds.
 
+**Input conditioning priority**
+
+- First-frame / image-to-video input: the extracted final frame of Clip A.
+- Optional secondary identity/style reference: the original wilted-flower reference still.
+- If the provider accepts only one image, prioritize Clip A's actual final frame for continuity.
+
 **Prompt**
 
-Continue the exact same macro flower scene from the supplied reference frame: one single bluebell-like flower in the same dark moonlit garden, same bent green stem, same folded blue-violet petals, same camera angle, scale, lighting, and background. The existing thin blue-and-gold magical ribbon completes a gentle orbit. A few particles travel from the stem into the petals. In one smooth, physically readable transformation, the stem straightens, the petals regain rich blue-violet color, and the flower slowly opens into one healthy elegant bloom. End with the fully opened flower held clearly in frame. Keep the plant's identity and position stable. Static macro camera, shallow depth of field, polished fantasy realism, restrained glow, natural motion, no scene transition.
+Continue directly from the supplied first frame, preserving its exact flower and scene. This is the same single bluebell-like flower in the same dark moonlit garden, with the same bent green stem, folded blue-violet petals, soil patch, camera angle, scale, lighting, and background. The existing thin blue-and-gold magical ribbon completes a gentle orbit. A few particles travel from the stem into the petals. In one smooth, physically readable transformation, the stem gradually straightens, the petals regain rich blue-violet color, and the flower slowly opens into one healthy elegant bloom. End with the fully opened flower held clearly in frame. Keep the plant's identity and position stable. Static macro camera, shallow depth of field, polished fantasy realism, restrained glow, natural motion, no scene transition.
 
 **Negative prompt**
 
 Different flower, additional flowers, new stems, changing camera angle, scene/location change, duplicated petals, sudden morph jump, instant pop-open, human hands, people, faces, excessive particles, explosions, fire, flicker, strobing, text, logos, signatures, baked-in watermark, borders, landscape framing, deformed botanical anatomy.
 
-**Expected first frame:** match Clip A's final composition as closely as the provider allows.  
+**Expected first frame:** visually identical to Clip A's extracted final frame.  
 **Expected end frame:** one fully restored blue-violet flower.
 
 ## Assembly and review
@@ -64,7 +70,8 @@ python src/media_quality_check.py \
 
 The assembler trims to the selected target duration; it cannot extend clips or invent missing frames. The technical check does not assess visual quality. Human review must confirm:
 - [ ] Both clips depict the same single flower, species, stem, petal arrangement, camera and lighting.
-- [ ] Clip B begins plausibly from Clip A's ending state.
+- [ ] Clip B's actual first frame matches Clip A's extracted final frame.
+- [ ] The join has no visible jump, scale shift, lighting shift, or background discontinuity.
 - [ ] No morphing glitches, flicker, jumps, or malformed petals.
 - [ ] Combined usable footage is at least 8 seconds and the final reveal is not cut off.
 - [ ] 9:16 framing and watermark safe area are clear.

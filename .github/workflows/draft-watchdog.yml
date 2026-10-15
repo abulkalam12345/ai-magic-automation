@@ -1,0 +1,74 @@
+name: WonderVexa draft schedule watchdog
+
+on:
+  schedule:
+    # Check morning run at 11:30 Nepal time (05:45 UTC).
+    - cron: "45 5 * * *"
+    # Check evening run at 23:30 Nepal time (17:45 UTC).
+    - cron: "45 17 * * *"
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: Draft slot to check
+        required: true
+        type: choice
+        options:
+          - morning
+          - evening
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  check-draft-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check whether the scheduled draft run exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          INPUT_SLOT: ${{ inputs.slot }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            slot="$INPUT_SLOT"
+          elif [[ "$EVENT_SCHEDULE" == "45 5 * * *" ]]; then
+            slot="morning"
+          else
+            slot="evening"
+          fi
+
+          today_utc="$(date -u +%F)"
+          if [[ "$slot" == "morning" ]]; then
+            window_start="${today_utc}T00:30:00Z"
+            window_end="${today_utc}T05:45:00Z"
+          else
+            window_start="${today_utc}T12:30:00Z"
+            window_end="${today_utc}T17:45:00Z"
+          fi
+
+          echo "Checking $slot draft run between $window_start and $window_end"
+          runs="$(gh api "repos/$REPOSITORY/actions/workflows/daily-drafts.yml/runs?event=schedule&per_page=100")"
+
+          match="$(jq -r --arg start "$window_start" --arg end "$window_end" '
+            [.workflow_runs[]
+              | select(.created_at >= $start and .created_at <= $end)
+              | select(.conclusion == "success")]
+            | sort_by(.created_at)
+            | last
+            | if . == null then empty else [.id, .created_at, .html_url] | @tsv end
+          ' <<< "$runs")"
+
+          if [[ -z "$match" ]]; then
+            echo "::error::No successful $slot scheduled draft run was found by the watchdog check."
+            echo "This check can detect a missed or failed run only if this watchdog itself is scheduled."
+            exit 1
+          fi
+
+          echo "Successful $slot run found: $match"

@@ -75,38 +75,42 @@ def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
     slug = re.sub(r"[^a-z0-9]+", "-", topic.lower()).strip("-")[:48] or "research-story"
     story_id = f"{day.isoformat()}-{slot}-research-{slug}"
     safe_topic = _markdown_text(topic)
-    summary = _markdown_text(signal["summary"][:420])
     source_name = _markdown_text(signal["source_name"])
     script = f"""# WonderVexa Original Story Brief
 
 **ID:** {story_id}  
 **Date / slot:** {day.isoformat()} / {slot}  
 **Status:** DRAFT — human review required  
-**Research status:** Signal only; not a verified social-platform trend
+**Research status:** Research idea only; not a verified social-platform trend  
+**Generation mode:** Deterministic story template; not an AI-written factual explainer
 
-## Research input (for inspiration, not as a factual script)
-- **Signal headline:** {safe_topic}
-- **Feed summary:** {summary}
+## Research idea (internal reference only)
+- **Idea cue:** {safe_topic}
 - **Source:** {source_name}
 - **Source feed:** {signal["source_url"]}
-- **Article:** {signal["url"]}
+- **Original article for human fact-checking:** {signal["url"]}
 
-## Original story concept
-Create a fictional magical transformation inspired only by the broad theme of the research signal. Do not reproduce the article, its wording, named people, brands, characters, or unverified factual claims.
+The feed summary is deliberately not reproduced in this script. Use the article only to understand the broad subject or question. Extract no article paragraphs, distinctive phrasing, narrative structure, images, video, or audio.
+
+## Original WonderVexa script direction
+Write an independently created fictional magical transformation inspired only by the broad idea cue. Build a new subject, setting, visual sequence, hook, and payoff. Do not retell the article, imitate its headline, use named people or brands, or present the fictional scene as a real event.
 
 ## 10-second vertical story
-- **0–2s — Hook:** Open on one striking visual problem connected to the broad theme; no factual claim or copied headline.
-- **2–5s — Build:** Introduce one fictional subject and a clear emotional goal.
-- **5–8s — Magic reveal:** A single readable blue-and-gold magical transformation resolves the visual problem.
-- **8–10s — Payoff:** Hold on the transformed scene, then show the WonderVexa identity.
+- **0–2s — Hook:** Introduce an original visual mystery related only to the broad idea.
+- **2–5s — Build:** Show a fictional subject facing a simple visual problem.
+- **5–8s — Magic reveal:** Resolve it with one readable blue-and-gold transformation.
+- **8–10s — Payoff:** Hold on the original transformed scene and show WonderVexa.
 
 ## Production prompt
-Original fictional fantasy visual, vertical 9:16, cinematic close-up, coherent continuous motion, blue magical energy ring with subtle gold particles, consistent subject design, readable transformation, no text baked into footage, no recognizable copyrighted characters, no living-artist imitation, no logos or real-person likenesses.
+Create an original fictional fantasy visual, vertical 9:16, cinematic close-up, coherent continuous motion, blue magical energy ring with subtle gold particles, consistent subject design, readable transformation, no text baked into footage, no recognizable copyrighted characters, no living-artist imitation, no logos or real-person likenesses.
 
-## Editorial checks
-- Verify the original source and confirm that the proposed fictional treatment does not misrepresent it.
-- Keep the source links and attribution with the internal draft record.
-- Do not claim this topic is trending or popular based on feed mentions alone.
+## Editorial and originality checks
+- A human editor must read the original source and independently verify any factual claim before adding it.
+- This template is not an AI model and does not independently research, verify facts, or write a bespoke factual script.
+- Use only the broad idea; write all narration and scene descriptions independently.
+- Do not reproduce article wording, substantial summaries, images, video, audio, or distinctive creative structure.
+- Keep source links for internal verification and attribution.
+- Do not call a research signal a verified trend.
 - Human review required before video generation or publication.
 """
     metadata = {

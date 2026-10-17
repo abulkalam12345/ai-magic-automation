@@ -6,12 +6,12 @@
 - Format target: 9:16 vertical magical transformation and visual-story Shorts.
 
 ## Goal and non-negotiable constraints
-Build an Android-friendly, zero-budget workflow that prepares two daily content drafts at 06:15 and 18:15 Asia/Kathmandu. Budget target is NPR 0: no paid API, subscription, payment card, auto-recharge or paid fallback. Never store secrets in source control. Do not modify the separate Nepal News project.
+Build an Android-friendly, zero-budget workflow that prepares one daily content draft at 06:15 Asia/Kathmandu. The evening slot is intentionally disabled; the schedule is a draft target, not a promise of a finished video. Budget target is NPR 0: no paid API, subscription, payment card, auto-recharge or paid fallback. Never store secrets in source control. Do not modify the separate Nepal News project.
 
 No automatic publishing. Every final video and every destination require explicit human approval. A viral result is not guaranteed.
 
 ## Implemented on main
-1. GitHub Actions scheduled draft workflow at 06:15 and 18:15 Nepal time, plus manual workflow-dispatch inputs.
+1. GitHub Actions scheduled draft workflow once daily at 06:15 Nepal time, plus manual workflow-dispatch inputs restricted to the morning slot.
 2. Offline deterministic content factory with 50 curated evergreen story seeds, scripts, shot lists, SEO metadata, hashtags and subject-matched SVG thumbnail drafts.
 3. Four-scene visual prompt packs with continuity locks, negative prompts and assembly notes.
 4. Draft package integrity validation and tests, including publishing-disabled checks.
@@ -21,7 +21,7 @@ No automatic publishing. Every final video and every destination require explici
 8. Fail-closed video-provider evidence manifest validator.
 
 ## Not complete / blocked
-- No reviewed RSS/Atom sources are enabled; research automation therefore produces no live-feed signals by default.
+- No reviewed RSS/Atom sources are enabled; research automation therefore produces no live-feed signals by default. The offline idea bank is evergreen content, not live trend detection.
 - No suitable hosted video provider has passed the NPR 0, quota, 9:16 duration, license and data-handling evidence gate.
 - No AI video has been generated; the Flower Magic proof remains a storyboard and two-clip prompt plan.
 - Local media assembly is implemented but has not been proven end-to-end with real licensed source clips in this project.

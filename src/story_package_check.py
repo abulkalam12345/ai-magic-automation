@@ -11,11 +11,11 @@ from pathlib import Path
 
 REQUIRED_SECTIONS = (
     "# WonderVexa Original Story Brief",
-    "## Research input",
-    "## Original story concept",
+    "## Research idea (internal reference only)",
+    "## Original WonderVexa script direction",
     "## 10-second vertical story",
     "## Production prompt",
-    "## Editorial checks",
+    "## Editorial and originality checks",
 )
 EXPECTED_SIGNAL_LABEL = "fresh_research_signal_not_verified_platform_trend"
 

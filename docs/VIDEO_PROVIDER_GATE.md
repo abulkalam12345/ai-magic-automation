@@ -179,3 +179,22 @@ No PixVerse account was created, no credits consumed, no API key requested, and 
 - **Decision:** neither provider is approved or integrated. Do not create accounts, submit jobs, request API keys, consume credits, or enable billing. Keep generation and publishing disabled. HailuoLabs must not be described as the official MiniMax/Hailuo service.
 
 No account was created and no generation or quota was used during this screening.
+
+
+## Kling AI screening (2026-10-17)
+
+**Decision: rejected for free-tier WonderVexa commercial/monetized publishing unless written permission is obtained.**
+
+- The current Kling AI Terms of Service (effective 2026-04-21) grant a personal, limited service-use licence and prohibit use of the service for commercial purposes without written consent (section 2.3(e)).
+- More directly, section 4.6 says that without Kling's written permission, users may not use, reproduce, distribute, modify, or create derivative works from Output for commercial purposes.
+- The same terms require prominent Kling AI attribution/branding for generated output unless written permission says otherwise (sections 4.5 and 4.6).
+- Kling's paid-service terms (effective 2026-10-10) expressly grant commercial use to members, which does not establish the same right for free users.
+- Some Kling marketing/feature pages contain conflicting statements suggesting free outputs can be used commercially. The binding Terms of Service restriction is the safer controlling rule; do not rely on promotional FAQ copy to authorize monetized publishing.
+- Privacy/IP caution: sections 4.7.1–4.7.3 grant Kling broad rights to use submitted Input and generated Output for service operation, promotion, product improvement and model development. Avoid uploading private or sensitive source material.
+
+Official sources:
+- https://kling.ai/docs/user-policy
+- https://kling.ai/docs/payment-policy
+- https://kling.ai/explore/open_video
+
+No account was created, no free credits consumed, no API key requested, and no generation submitted. Kling is not integrated or approved. Do not use free-tier output for WonderVexa commercial publishing without clear written authorization applicable to the free plan. Keep generation and publishing disabled.

@@ -132,3 +132,25 @@ The user accepts a provider's own visible watermark on free-tier output. A provi
 Do not remove, crop out, blur, cover, or otherwise defeat a provider watermark or attribution. Before use, verify that the provider's free-tier terms permit downloading, editing/overlaying a channel logo, and publishing the resulting video on the intended social platforms, including commercial/monetized use if applicable. A watermark acceptance does not waive licensing, quota, account, privacy, or billing checks.
 
 Keep the same zero-budget controls: no payment method, no paid fallback, no token purchases, and no automatic publishing. A provider may only be integrated after its current free quota, output rights, duration/aspect-ratio, and API access are verified. Generation stays disabled until a separately approved test succeeds.
+
+
+## Free.ai official page conflict recheck (2026-10-17)
+
+The latest official pages still conflict, so Free.ai is **not approved for automation**:
+
+- Homepage says the free account gets 30,000 tokens/day but only **one video every two days**, and its FAQ says a clip costs 30,000 tokens.
+- Pricing page says Free has 30,000 tokens/day and **one video clip/day**, while its pricing explanation gives an approximate 15,000-token minimum / 2,500 tokens per second.
+- CogVideoX model page says approximately 10,000 tokens per 5-second clip, with a maximum of 6 seconds and 9:16 supported.
+- Text-to-video page says a 4-second clip is about 10,000 tokens, supports 2–6 seconds and 9:16, and claims commercial use is permitted.
+- API page's key-creation flow says **purchase tokens**, despite listing a Free plan with 30,000 tokens/day and 1,000 API requests/month. This does not establish that the free web allowance is actually usable through API.
+
+Official pages checked:
+- https://free.ai/
+- https://free.ai/pricing/
+- https://free.ai/models/cogvideox-2b/
+- https://free.ai/video/text-to-video/
+- https://free.ai/api/
+
+**Decision:** Keep Free.ai as a possible *manual, user-controlled web trial only*, not an unattended provider. The contradictory free video cap and token cost are unresolved. Its 2–6 second clips would need stitching to reach the 8–12 second target; do not assume multiple clips fit the free quota. The current one-video-per-day target does not resolve these contradictions. The user accepts a provider watermark, but that does not waive rights, quota, or billing checks.
+
+No account was created, no API key requested, no generation run, and no tokens consumed. Do not enable generation, add credentials, configure billing, or use paid fallback. A manual trial requires the user to inspect the live account balance/quota and confirm the exact free cost before pressing Generate. Publishing remains disabled pending explicit user approval.

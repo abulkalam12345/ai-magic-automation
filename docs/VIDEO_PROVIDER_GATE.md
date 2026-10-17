@@ -107,3 +107,19 @@ References:
 - **Synthesia — not suitable for this pipeline.** Its official page advertises up to 10 minutes/month on a free plan, but states free videos include Synthesia branding and that downloads require a paid plan. This does not meet the WonderVexa output/export and branding requirements. Reference: https://www.synthesia.io/features/text-to-video
 
 **Screening result:** none of these providers qualifies for integration. Keep `generation_enabled=false`, do not add credentials, and do not enable any billing or paid fallback. These are desktop/cloud service assessments only; no account creation, API key request, generation job, or quota use occurred.
+
+
+## Free.ai reassessment for a one-video-per-day target (2026-10-17)
+
+The target has been reduced from two daily videos to one. This makes Free.ai's **website free tier** worth considering for a manual trial, but does not qualify its API for automation.
+
+Current official pages reviewed:
+- Pricing: https://free.ai/pricing/ — advertises 30,000 free tokens/day and a free-account cap of one video clip/day, with no credit card. It also lists video at 15,000 tokens minimum plus 2,500 tokens/second beyond 6 seconds.
+- Tools directory: https://free.ai/tools/ — says video needs a free account, a video costs 30,000 tokens, and hosted self-hosted-model outputs are commercially usable.
+- Text-to-video: https://free.ai/video/text-to-video/ — describes CogVideoX output as a 2–6 second MP4 clip and advertises commercial use.
+- API pricing: https://free.ai/api/ — lists CogVideoX at 30,000 tokens/video and 30,000 free tokens/day, but the current Docs FAQ says the daily free pool applies to web requests, not API calls; the API page also says "Purchase tokens" in its API-key flow.
+- Docs: https://free.ai/docs/ — says the free daily pool applies to web requests, not API calls, and the API request cap is 1,000/month on Free.
+
+**Decision:** Free.ai may be tried manually on its website for at most one short clip/day, subject to the account UI confirming the free quota and no payment requirement. It is **not approved for unattended API automation**. The clip is only 2–6 seconds, so it does not alone meet WonderVexa's intended 8–12 second finished video. Do not assume stitching, multiple clips, exact 9:16 output, or commercial permission beyond the terms shown in the actual free account.
+
+No account has been created, no API key requested, no generation submitted, and no tokens consumed. Keep generation disabled in GitHub Actions and publishing disabled. A manual trial requires the user to sign up/confirm the free account on the official site and verify the displayed cost before pressing Generate; stop if a payment method, token purchase, or paid upgrade is requested.

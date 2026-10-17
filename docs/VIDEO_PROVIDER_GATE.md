@@ -170,3 +170,12 @@ Official sources:
 - https://pixverse.ai/en/pixverse-platform-terms-of-service
 
 No PixVerse account was created, no credits consumed, no API key requested, and no generation submitted. Do not integrate or use free outputs for WonderVexa commercial/monetized publishing unless PixVerse provides clear written commercial authorization applicable to the exact plan and workflow. A visible provider watermark would be acceptable under the user's preference, but does not resolve the licensing restriction. Keep generation and publishing disabled.
+
+
+## Pika and HailuoLabs screening (2026-10-17)
+
+- **Pika — rejected for free commercial publishing.** Its current pricing page lists the Free plan with no commercial licence; its Terms of Service limit ordinary use to personal, non-commercial use unless the selected plan expressly grants commercial rights. The current Free pricing display also lists zero monthly credits / packs only, so it does not establish a repeatable free daily quota. Official sources: https://pika.art/pricing and https://pika.art/terms-of-service
+- **HailuoLabs (hailuolabs.ai) — not approved.** This is an independent studio and explicitly says it is not affiliated with MiniMax. Its pricing page advertises 160 credits/month, up to five watermarked 512p videos, with no card required; this is far below one finished video/day. Its terms say users own outputs subject to underlying model-provider rights, and generation uses third-party models including MiniMax Hailuo via Replicate. The terms do not clearly establish that the free tier grants commercial/monetized social publishing rights or that downstream model terms permit that use. Official service sources: https://hailuolabs.ai/ and https://hailuolabs.ai/terms
+- **Decision:** neither provider is approved or integrated. Do not create accounts, submit jobs, request API keys, consume credits, or enable billing. Keep generation and publishing disabled. HailuoLabs must not be described as the official MiniMax/Hailuo service.
+
+No account was created and no generation or quota was used during this screening.

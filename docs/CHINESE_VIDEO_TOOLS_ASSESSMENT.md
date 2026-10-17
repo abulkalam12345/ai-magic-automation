@@ -13,6 +13,9 @@ Chinese-origin tools are included as research candidates, but **none is approved
 
 ## Candidate 1: Kling AI (Kuaishou) — not approved
 
+**Official-terms recheck (2026-10-17):** Kling's current Terms of Service restrict use of the service for commercial purposes without written consent, require Kling branding/attribution for generated output absent written permission, and prohibit commercial use/modification of output without written permission. These binding terms conflict with promotional FAQ wording that suggests free-tier commercial use. The Terms therefore control this project's decision: free-tier Kling output is **not approved for WonderVexa commercial/social monetized use** unless Kling provides explicit written permission applicable to the account and output.
+
+
 Official pages:
 - Video generation / image-to-video overview: https://kling.ai/explore/open_video
 - Kling AI assistance FAQ: https://kling.ai/explore/kling_ai_assistance

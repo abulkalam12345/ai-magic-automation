@@ -97,3 +97,13 @@ References:
 - https://free.ai/video/text-to-video/
 
 **Decision: Free.ai is not approved and is removed from the candidate shortlist for scheduled automation.** Do not create an account, request an API key, submit generation jobs, consume tokens, or integrate it. Generation remains disabled; no paid fallback is allowed. See [the updated detailed assessment](VIDEO_PROVIDER_FREEAI_ASSESSMENT.md).
+
+
+
+## Additional hosted-provider screening (2026-10-17)
+
+- **Hugging Face Inference Providers — rejected for zero-budget production.** Official pricing says Free users receive only $0.10 monthly credit, subject to change, and extra usage is pay-as-you-go. The official text-to-video API docs show the video task and provider routing, but do not promise enough free video-generation quota for two finished videos every day. Do not route requests through a paid provider or allow extra usage. References: https://huggingface.co/docs/inference-providers/pricing and https://huggingface.co/docs/inference-providers/main/en/tasks/text-to-video
+- **FXI Studio — rejected for the daily schedule.** Its official page advertises 65 initial credits, about three short video clips, then 25 credits weekly. It says stitched-film export requires Creator plan or above. This is not enough for two finished 8–12 second videos every day. No account created and no credits consumed. Reference: https://www.fxi.studio/free-ai-film-maker
+- **Synthesia — not suitable for this pipeline.** Its official page advertises up to 10 minutes/month on a free plan, but states free videos include Synthesia branding and that downloads require a paid plan. This does not meet the WonderVexa output/export and branding requirements. Reference: https://www.synthesia.io/features/text-to-video
+
+**Screening result:** none of these providers qualifies for integration. Keep `generation_enabled=false`, do not add credentials, and do not enable any billing or paid fallback. These are desktop/cloud service assessments only; no account creation, API key request, generation job, or quota use occurred.

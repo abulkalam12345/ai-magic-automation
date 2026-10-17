@@ -198,3 +198,12 @@ Official sources:
 - https://kling.ai/explore/open_video
 
 No account was created, no free credits consumed, no API key requested, and no generation submitted. Kling is not integrated or approved. Do not use free-tier output for WonderVexa commercial publishing without clear written authorization applicable to the free plan. Keep generation and publishing disabled.
+
+
+## Adobe Firefly and LTX Studio screening (2026-10-17)
+
+- **Adobe Firefly — not approved for daily unattended video generation.** Adobe's official generative-credits FAQ says free users receive limited daily complimentary generations, but does not publish a dependable free video quota sufficient for one finished 8–12 second video every day. Video generation can consume credits at high per-second rates (the FAQ lists 20 credits/second at 540p, 50 at 720p, and 100 at 1080p for the premium Generate Video feature). Adobe says eligible Firefly outputs can be used commercially, but the free tier's generation allowance and API automation entitlement are not established for this target. Do not infer that a daily free generation means a complete 8–12 second video or a free API route.
+  Official sources: https://helpx.adobe.com/creative-cloud/apps/generative-ai/generative-credits-faq.html and https://www.adobe.com/products/firefly/plans.html
+- **LTX Studio — rejected for free commercial publishing and recurring automation.** Its official help centre says free accounts may receive a one-time 800-credit allocation, which does not renew; free-credit outputs are personal-use only and exclude monetization, marketing, and business use. Its plan comparison lists commercial-use rights on Standard and above, not Free. This is not a recurring free commercial quota.
+  Official sources: https://help.ltx.io/hc/en-us/articles/32042304720146-Is-LTX-Studio-free and https://help.ltx.io/hc/en-us/articles/32046651702290-Which-LTX-Studio-plans-include-a-commercial-use-license
+- **Decision:** neither provider is approved or integrated. No account was created, no free quota was consumed, no API key was requested, and no generation was submitted. Keep generation disabled and publishing disabled. A provider's visible watermark remains acceptable, but does not override commercial licensing, quota, API, or billing requirements.

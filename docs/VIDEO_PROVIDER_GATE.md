@@ -123,3 +123,12 @@ Current official pages reviewed:
 **Decision:** Free.ai may be tried manually on its website for at most one short clip/day, subject to the account UI confirming the free quota and no payment requirement. It is **not approved for unattended API automation**. The clip is only 2–6 seconds, so it does not alone meet WonderVexa's intended 8–12 second finished video. Do not assume stitching, multiple clips, exact 9:16 output, or commercial permission beyond the terms shown in the actual free account.
 
 No account has been created, no API key requested, no generation submitted, and no tokens consumed. Keep generation disabled in GitHub Actions and publishing disabled. A manual trial requires the user to sign up/confirm the free account on the official site and verify the displayed cost before pressing Generate; stop if a payment method, token purchase, or paid upgrade is requested.
+
+
+## Watermark policy update (2026-10-17)
+
+The user accepts a provider's own visible watermark on free-tier output. A provider watermark is **not a disqualifier**. The final WonderVexa edit may add the WonderVexa channel logo as a separate overlay, preferably in a clear corner that does not obscure the provider watermark, captions, or important scene content.
+
+Do not remove, crop out, blur, cover, or otherwise defeat a provider watermark or attribution. Before use, verify that the provider's free-tier terms permit downloading, editing/overlaying a channel logo, and publishing the resulting video on the intended social platforms, including commercial/monetized use if applicable. A watermark acceptance does not waive licensing, quota, account, privacy, or billing checks.
+
+Keep the same zero-budget controls: no payment method, no paid fallback, no token purchases, and no automatic publishing. A provider may only be integrated after its current free quota, output rights, duration/aspect-ratio, and API access are verified. Generation stays disabled until a separately approved test succeeds.

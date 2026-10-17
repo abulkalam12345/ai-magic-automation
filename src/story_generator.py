@@ -85,7 +85,7 @@ def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
 **Generation mode:** Deterministic story template; not an AI-written factual explainer
 
 ## Research idea (internal reference only)
-- **Idea cue:** {safe_topic}
+- **Discovery headline (internal label only — do not reuse or paraphrase):** {safe_topic}
 - **Source:** {source_name}
 - **Source feed:** {signal["source_url"]}
 - **Original article for human fact-checking:** {signal["url"]}
@@ -93,7 +93,7 @@ def build_story_brief(signal: dict, day: date, slot: str) -> tuple[str, dict]:
 The feed summary is deliberately not reproduced in this script. Use the article only to understand the broad subject or question. Extract no article paragraphs, distinctive phrasing, narrative structure, images, video, or audio.
 
 ## Original WonderVexa script direction
-Write an independently created fictional magical transformation inspired only by the broad idea cue. Build a new subject, setting, visual sequence, hook, and payoff. Do not retell the article, imitate its headline, use named people or brands, or present the fictional scene as a real event.
+Treat the discovery headline only as a pointer to the broad subject. First abstract the subject into a general idea; then write an independently created fictional magical transformation. Never reuse or closely paraphrase the headline. Build a new subject, setting, visual sequence, hook, and payoff. Do not retell the article, imitate its headline, use named people or brands, or present the fictional scene as a real event.
 
 ## 10-second vertical story
 - **0–2s — Hook:** Introduce an original visual mystery related only to the broad idea.
@@ -107,7 +107,7 @@ Create an original fictional fantasy visual, vertical 9:16, cinematic close-up, 
 ## Editorial and originality checks
 - A human editor must read the original source and independently verify any factual claim before adding it.
 - This template is not an AI model and does not independently research, verify facts, or write a bespoke factual script.
-- Use only the broad idea; write all narration and scene descriptions independently.
+- Use only an abstracted broad idea; do not reuse or closely paraphrase the discovery headline. Write all narration and scene descriptions independently.
 - Do not reproduce article wording, substantial summaries, images, video, audio, or distinctive creative structure.
 - Keep source links for internal verification and attribution.
 - Do not call a research signal a verified trend.

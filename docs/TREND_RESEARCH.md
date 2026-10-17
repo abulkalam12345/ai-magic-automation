@@ -13,7 +13,7 @@ The scheduled draft workflow now calls `src/scheduled_research.py` after the nor
 - `enabled` must be explicitly changed to `true`.
 - Only reviewed public HTTPS RSS/Atom feed URLs may be added.
 - No feed is approved or enabled in this change; the default configuration makes no external feed requests.
-- When enabled with valid sources, the workflow collects attributed signals, writes research-only story briefs for the morning and evening slots, and validates each package.
+- When enabled with valid sources, the workflow collects attributed signals, writes one research-only story brief for the daily morning slot, and validates each package.
 - If no fresh signal is available, the ordinary evergreen drafts remain the only drafts for that run.
 - Feed failures fail the research stage closed; no feed text is treated as trusted instructions.
 

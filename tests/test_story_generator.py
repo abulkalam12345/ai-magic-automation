@@ -44,8 +44,9 @@ class StoryGeneratorTests(unittest.TestCase):
         script, metadata = generator.build_story_brief(
             signal(summary=original_summary),
             date(2026, 10, 17), "morning")
-        self.assertIn("Idea cue:", script)
-        self.assertIn("Use only the broad idea", script)
+        self.assertIn("Discovery headline (internal label only — do not reuse or paraphrase):", script)
+        self.assertIn("Never reuse or closely paraphrase the headline.", script)
+        self.assertIn("Use only an abstracted broad idea", script)
         self.assertIn("not an AI model", script)
         self.assertNotIn(original_summary, script)
         self.assertNotIn("secret blue crystal engine", script)

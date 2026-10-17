@@ -154,3 +154,19 @@ Official pages checked:
 **Decision:** Keep Free.ai as a possible *manual, user-controlled web trial only*, not an unattended provider. The contradictory free video cap and token cost are unresolved. Its 2–6 second clips would need stitching to reach the 8–12 second target; do not assume multiple clips fit the free quota. The current one-video-per-day target does not resolve these contradictions. The user accepts a provider watermark, but that does not waive rights, quota, or billing checks.
 
 No account was created, no API key requested, no generation run, and no tokens consumed. Do not enable generation, add credentials, configure billing, or use paid fallback. A manual trial requires the user to inspect the live account balance/quota and confirm the exact free cost before pressing Generate. Publishing remains disabled pending explicit user approval.
+
+
+## PixVerse screening (2026-10-17)
+
+**Decision: not approved for WonderVexa free commercial production.**
+
+Official PixVerse app FAQ states that free members receive 60 daily credits (non-members 30), refreshed at UTC midnight; generation cost varies by model, resolution, duration, and settings and is shown before generation. This does not by itself establish enough credits for a finished 8–12 second video each day.
+
+More importantly, the official PixVerse Terms of Service state that output use is limited to **non-commercial purposes** unless separate authorization or a commercial-use license is obtained. A later download clause says certain information may be used commercially if unaltered, creating an ambiguity with the explicit output restriction. For a monetized/social brand workflow, do not rely on that ambiguous clause. The official API platform terms separately require written authorization for certain commercial-profit uses of API-generated videos and preserve source/generation identifiers.
+
+Official sources:
+- https://docs.pixverse.ai/FAQ-PixVerse-App-1533e99bf35080888cb5effee85f8289
+- https://pixverse.ai/en/terms-of-service
+- https://pixverse.ai/en/pixverse-platform-terms-of-service
+
+No PixVerse account was created, no credits consumed, no API key requested, and no generation submitted. Do not integrate or use free outputs for WonderVexa commercial/monetized publishing unless PixVerse provides clear written commercial authorization applicable to the exact plan and workflow. A visible provider watermark would be acceptable under the user's preference, but does not resolve the licensing restriction. Keep generation and publishing disabled.

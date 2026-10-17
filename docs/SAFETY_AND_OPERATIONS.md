@@ -10,7 +10,7 @@ This repository is only for WonderVexa video automation. Do not inspect, modify,
 - Preserve a clean master export where practical.
 
 ## Daily drafts
-- Scheduled workflow creates two draft packages per day (morning/evening, Asia/Kathmandu).
+- Scheduled workflow creates one draft package per day in the morning (Asia/Kathmandu).
 - Drafts contain scripts, shot lists, titles, descriptions, keywords, hashtags, metadata and SVG thumbnail concepts.
 - Current topic bank is curated/offline; do not describe it as live trend research or guaranteed unique forever.
 - Scheduled workflows are best-effort and artifacts expire after 14 days.

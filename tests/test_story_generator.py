@@ -39,6 +39,18 @@ class StoryGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unverified"):
             generator.validate_signal(signal(signal_label="verified_trend"))
 
+    def test_story_uses_idea_only_and_does_not_reproduce_feed_summary(self):
+        original_summary = "UNIQUE ARTICLE SENTENCE: researchers discovered a secret blue crystal engine."
+        script, metadata = generator.build_story_brief(
+            signal(summary=original_summary),
+            date(2026, 10, 17), "morning")
+        self.assertIn("Idea cue:", script)
+        self.assertIn("Use only the broad idea", script)
+        self.assertIn("not an AI model", script)
+        self.assertNotIn(original_summary, script)
+        self.assertNotIn("secret blue crystal engine", script)
+        self.assertEqual(metadata["source_name"], "Example Research Feed")
+
     def test_rejects_unsafe_article_url(self):
         for url in ("javascript:alert(1)", "/relative", "https://user:pass@example.org/story"):
             with self.subTest(url=url), self.assertRaisesRegex(ValueError, "HTTP"):

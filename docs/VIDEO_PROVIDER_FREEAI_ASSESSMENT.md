@@ -25,7 +25,7 @@ The official product and model pages describe a self-hosted CogVideoX route:
 
 Do not treat the public documentation as a single consistent quota contract:
 
-1. **Free video frequency differs by page.** The main English Pricing page says free accounts have a daily cap of 1 video. Other localized official Pricing pages say one clip every two days. This discrepancy must be resolved in the live account UI/support before planning a test. Either limit is below the WonderVexa target of one video per day.
+1. **Free video frequency differs by page.** The main English Pricing page says free accounts have a daily cap of 1 video. Other localized official Pricing pages say one clip every two days. The one-per-day statement nominally matches the target but leaves no retry capacity; the every-two-days statement does not meet it. This discrepancy must be resolved in the live account UI/support before any test or automation decision.
 2. **Per-video token cost differs by page.** The CogVideoX model page says about 10,000 tokens typical and 15,000 minimum. The main English Pricing page says video costs 15,000 minimum per clip. API model documentation previously reviewed listed 30,000 tokens/video. Do not budget against the lowest number; confirm the exact selected model and displayed cost before any action.
 3. **API model routing must be explicit.** The general API quick start has shown premium-model examples. A request must explicitly select the self-hosted CogVideoX-2B model. Never use a generic default that could route to a paid/external provider.
 4. **Free pool and per-tool caps are separate.** 30,000 tokens/day does not mean 30,000 tokens worth of video can be generated every day; the per-video cap applies separately.
@@ -37,7 +37,7 @@ Do not treat the public documentation as a single consistent quota contract:
 - 9:16 portrait is advertised.
 - Commercial use is described for self-hosted outputs, subject to current Terms, model license and applicable law.
 - Multi-clip assembly is technically supported locally, but continuity needs a human review.
-- The one-video-per-day (or every-two-days on localized pages) free cap is insufficient for one daily video.
+- The published frequency cap is inconsistent: one English page nominally permits one video daily, while localized pages say one every two days. Neither provides a dependable, consistently documented daily production allowance.
 - Free pool, token cost, frequency caps and API model selection are not yet sufficiently consistent for unattended automation.
 
 ### Decision
@@ -57,7 +57,7 @@ No account was created, no email was submitted, no API key was requested, no API
 
 ## Official-page recheck (2026-10-17)
 
-The current official Free.ai homepage now states that a free account receives 30,000 tokens/day but is limited to **one video every two days**. It also states that a video clip costs 30,000 tokens and consumes the whole daily pool on the day it is generated. The official API pricing table lists CogVideoX at 30,000 tokens/video. These current statements resolve the practical feasibility question even though older model/product pages still show lower estimates or conflicting duration/cost details.
+The current official Free.ai homepage and API pricing information reviewed on 2026-10-17 indicate a 30,000-token daily free pool and a 30,000-token CogVideoX clip cost. However, the frequency statement is not consistent across the official pages: the homepage/other localized pages indicate one video every two days, while the main English Pricing page says a daily cap of one video. Treat the frequency cap as unresolved until confirmed in the actual account UI or by official support. At 30,000 tokens per clip, one generation would also consume the entire stated daily pool, leaving no retry headroom.
 
 Current official references checked:
 - https://free.ai/ — free account quota and one-video-every-two-days cap.
@@ -65,6 +65,6 @@ Current official references checked:
 - https://free.ai/models/cogvideox-2b/ — CogVideoX model details, 9:16 support, and API model slug.
 - https://free.ai/video/text-to-video/ — product interface and duration information.
 
-**Updated decision: reject Free.ai for WonderVexa's scheduled generation.** Its published free frequency cap is insufficient for the target of one video per day. Do not create an account, request an API key, generate a test clip, or integrate it into GitHub Actions. A one-off test would consume the full daily token pool and still would not demonstrate sustainable daily generation. No account/API activity has been performed.
+**Updated decision: do not approve Free.ai for WonderVexa's scheduled generation.** Its official quota/frequency statements conflict, and one clip consumes the entire stated daily token pool, leaving no retry headroom. The two-day limit shown on some official pages would also fail the target. Do not create an account, request an API key, generate a test clip, or integrate it into GitHub Actions unless the user explicitly approves a test after the quota and terms are reconciled. No account/API activity has been performed.
 
 Older quota/cost statements elsewhere in this document are historical snapshots and are superseded by this dated recheck. The generation gate remains disabled.

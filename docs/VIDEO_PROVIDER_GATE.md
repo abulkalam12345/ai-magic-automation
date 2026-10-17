@@ -76,19 +76,19 @@ Full assessment: [VIDEO_PROVIDER_FREEAI_ASSESSMENT.md](VIDEO_PROVIDER_FREEAI_ASS
 
 A later review of the official [CogVideoX model page](https://free.ai/models/cogvideox-2b/) and [Pricing page](https://free.ai/pricing/) found additional limits that materially affect feasibility: the model page estimates about 10K tokens for a ~5-second clip (minimum 15K), while the API page lists 30K tokens/video; Pricing says Free accounts are capped at one video clip every two days. The [Developer API page](https://free.ai/developer/) says a free account can create an API key without a card, but this does not remove the video-frequency cap or settle the conflicting per-video cost. The API uses a shared wallet, so no paid balance, token pack, subscription, payment method, or premium fallback may be used.
 
-**Updated decision:** Free.ai remains a possible one-off manually approved proof candidate only, not a scheduled backend. The one-video-every-two-days cap cannot support the target of two daily videos. Do not create an account, request a key, or generate until the user explicitly approves the single test and the current model cost/cap are verified. See [full assessment](VIDEO_PROVIDER_FREEAI_ASSESSMENT.md).
+**Updated decision:** Free.ai remains a possible one-off manually approved proof candidate only, not a scheduled backend. The one-video-every-two-days cap cannot support the target of one video per day. Do not create an account, request a key, or generate until the user explicitly approves the single test and the current model cost/cap are verified. See [full assessment](VIDEO_PROVIDER_FREEAI_ASSESSMENT.md).
 
 
 ## Free.ai official-page quota conflict (2026-10-11)
 
-The current main English [Pricing page](https://free.ai/pricing/) says Free accounts have a daily cap of one video. Other localized official Pricing pages say one clip every two days. The official [CogVideoX-2B model page](https://free.ai/models/cogvideox-2b/) estimates about 10K tokens per clip with a 15K minimum; the main Pricing page says 15K minimum, while the API model table previously reviewed showed 30K/video. Treat frequency and cost as unresolved until confirmed in the live account UI/support. Even the more generous daily cap is below WonderVexa's target of two videos/day. No account or API activity is authorized by this assessment.
+The current main English [Pricing page](https://free.ai/pricing/) says Free accounts have a daily cap of one video. Other localized official Pricing pages say one clip every two days. The official [CogVideoX-2B model page](https://free.ai/models/cogvideox-2b/) estimates about 10K tokens per clip with a 15K minimum; the main Pricing page says 15K minimum, while the API model table previously reviewed showed 30K/video. Treat frequency and cost as unresolved until confirmed in the live account UI/support. Even the more generous daily cap is below WonderVexa's target of one video/day. No account or API activity is authorized by this assessment.
 
 Updated full assessment: [VIDEO_PROVIDER_FREEAI_ASSESSMENT.md](VIDEO_PROVIDER_FREEAI_ASSESSMENT.md).
 
 
 ## Official recheck (2026-10-17) — Free.ai rejected for schedule
 
-The current official Free.ai homepage states **one video every two days** on a free account, despite a 30,000-token daily pool. The same page says a video clip costs 30,000 tokens; the official API pricing table also lists CogVideoX at 30,000 tokens/video. This is not a viable backend for WonderVexa's target of two videos every 24 hours. Older Free.ai pages still show conflicting lower clip costs/durations; the stricter current quota and API pricing are used for this decision.
+The current official Free.ai homepage states **one video every two days** on a free account, despite a 30,000-token daily pool. The same page says a video clip costs 30,000 tokens; the official API pricing table also lists CogVideoX at 30,000 tokens/video. This is not a viable backend for WonderVexa's target of one video every 24 hours. Older Free.ai pages still show conflicting lower clip costs/durations; the stricter current quota and API pricing are used for this decision.
 
 References:
 - https://free.ai/
@@ -111,7 +111,7 @@ References:
 
 ## Free.ai reassessment for a one-video-per-day target (2026-10-17)
 
-The target has been reduced from two daily videos to one. This makes Free.ai's **website free tier** worth considering for a manual trial, but does not qualify its API for automation.
+The target has been reduced from one daily video to one. This makes Free.ai's **website free tier** worth considering for a manual trial, but does not qualify its API for automation.
 
 Current official pages reviewed:
 - Pricing: https://free.ai/pricing/ — advertises 30,000 free tokens/day and a free-account cap of one video clip/day, with no credit card. It also lists video at 15,000 tokens minimum plus 2,500 tokens/second beyond 6 seconds.

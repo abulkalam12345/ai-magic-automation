@@ -1,7 +1,7 @@
 # WonderVexa daily content pipeline
 
 ## What the scheduled workflow does
-Twice per day (06:15 and 18:15 Asia/Kathmandu), GitHub Actions runs the offline content factory and stores a downloadable artifact containing:
+Once per day (06:15 Asia/Kathmandu), GitHub Actions runs the offline content factory and stores a downloadable artifact containing:
 - a short-form script and shot list;
 - a suggested title and description;
 - long-tail keyword phrases and hashtags;

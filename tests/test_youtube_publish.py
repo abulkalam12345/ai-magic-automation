@@ -57,6 +57,14 @@ class YouTubePublishTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_metadata(self.metadata_path)
 
+    def test_rejects_malformed_publishing_metadata(self) -> None:
+        for value in (None, [], "disabled", True):
+            with self.subTest(value=value):
+                bad = dict(self.metadata, publishing=value)
+                self.metadata_path.write_text(json.dumps(bad), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    load_metadata(self.metadata_path)
+
     def test_rejects_long_title(self) -> None:
         bad = dict(self.metadata, title="x" * 101)
         self.metadata_path.write_text(json.dumps(bad), encoding="utf-8")

@@ -13,6 +13,7 @@ from src.youtube_publish import (
     build_request_body,
     load_metadata,
     require_upload_gates,
+    upload_video,
     validate_video,
 )
 
@@ -91,6 +92,26 @@ class YouTubePublishTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(PublishingBlocked):
                 require_upload_gates(public=True)
+
+    def test_upload_boundary_rejects_non_draft_even_when_called_directly(self) -> None:
+        env = {
+            "PUBLISHING_ENABLED": "true",
+            "YOUTUBE_AUTOMATION_AUTHORIZED": "true",
+        }
+        bad = dict(self.metadata, status="ready")
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(ValueError):
+                upload_video(self.video_path, bad)
+
+    def test_upload_boundary_validates_mp4_before_authentication(self) -> None:
+        env = {
+            "PUBLISHING_ENABLED": "true",
+            "YOUTUBE_AUTOMATION_AUTHORIZED": "true",
+        }
+        missing = self.root / "missing.mp4"
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(ValueError):
+                upload_video(missing, self.metadata)
 
     def test_private_is_default(self) -> None:
         loaded = load_metadata(self.metadata_path)

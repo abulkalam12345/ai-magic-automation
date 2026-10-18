@@ -8,7 +8,7 @@
 ## Goal and non-negotiable constraints
 Build an Android-friendly, zero-budget workflow that prepares one daily content draft at 06:15 Asia/Kathmandu. The evening slot is intentionally disabled; the schedule is a draft target, not a promise of a finished video. Budget target is NPR 0: no paid API, subscription, payment card, auto-recharge or paid fallback. Never store secrets in source control. Do not modify the separate Nepal News project.
 
-No automatic publishing. Every final video and every destination require explicit human approval. A viral result is not guaranteed.
+Target behavior requested by the user: one daily video should be generated and published automatically without a daily manual posting step, wherever official platform rules permit. This supersedes the earlier preference for per-video YouTube upload approval as the desired end state. Publishing must nevertheless remain disabled until official API eligibility, account OAuth, required app reviews/audits, and cost-free operation are verified. Platform-mandated per-post consent (notably TikTok) cannot be bypassed. A viral result is not guaranteed.
 
 ## Implemented on main
 1. GitHub Actions scheduled draft workflow once daily at 06:15 Nepal time, plus manual workflow-dispatch inputs restricted to the morning slot.
@@ -26,6 +26,7 @@ No automatic publishing. Every final video and every destination require explici
 - No AI video has been generated; the Flower Magic proof remains a storyboard and two-clip prompt plan.
 - Local media assembly is implemented but has not been proven end-to-end with real licensed source clips in this project.
 - No platform publishing adapters or account eligibility checks are complete. Publishing remains disabled.
+- Official platform prerequisites and blockers are documented in [Platform Publishing Gate](PLATFORM_PUBLISHING_GATE.md). YouTube's upload API is available but not configured; Meta account/API eligibility is not yet verified; TikTok public Direct Post requires audit and per-post creator consent.
 
 ## First video proof
 The planned proof is a 10-second vertical restoration of one wilted bluebell-like flower by a restrained blue-and-gold magical ring. See:

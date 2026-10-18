@@ -30,9 +30,21 @@ def load_settings(path: Path) -> dict:
 
 
 def preflight(settings: dict) -> list[str]:
-    errors = [f"Missing settings section: {key}" for key in REQUIRED if key not in settings]
-    generation = settings.get("generation", {})
-    publishing = settings.get("publishing", {})
+    if not isinstance(settings, dict):
+        return ["Settings must be an object."]
+    errors: list[str] = []
+    sections: dict[str, dict] = {}
+    for key in REQUIRED:
+        value = settings.get(key)
+        if not isinstance(value, dict):
+            errors.append(f"Settings section {key!r} must be an object.")
+        else:
+            sections[key] = value
+    if errors:
+        return errors
+
+    generation = sections["generation"]
+    publishing = sections["publishing"]
     if generation.get("free_only") is not True:
         errors.append("generation.free_only must be true.")
     if generation.get("max_cost_usd") != 0:

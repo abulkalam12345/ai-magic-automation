@@ -38,6 +38,7 @@ Local FFmpeg utilities can assemble already-generated, licensed clips, add the W
 ## Documentation
 
 - [Daily content pipeline](docs/DAILY_CONTENT_PIPELINE.md)
+- [Zero-budget procedural motion-graphics proof (manual test only)](docs/ZERO_BUDGET_MOTION_GRAPHICS.md)
 - [Subtitle workflow and review](docs/SUBTITLE_WORKFLOW.md)
 - [Trend research adapter](docs/TREND_RESEARCH.md)
 - [Video provider evidence gate](docs/VIDEO_PROVIDER_GATE.md)

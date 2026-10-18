@@ -207,3 +207,23 @@ No account was created, no free credits consumed, no API key requested, and no g
 - **LTX Studio — rejected for free commercial publishing and recurring automation.** Its official help centre says free accounts may receive a one-time 800-credit allocation, which does not renew; free-credit outputs are personal-use only and exclude monetization, marketing, and business use. Its plan comparison lists commercial-use rights on Standard and above, not Free. This is not a recurring free commercial quota.
   Official sources: https://help.ltx.io/hc/en-us/articles/32042304720146-Is-LTX-Studio-free and https://help.ltx.io/hc/en-us/articles/32046651702290-Which-LTX-Studio-plans-include-a-commercial-use-license
 - **Decision:** neither provider is approved or integrated. No account was created, no free quota was consumed, no API key was requested, and no generation was submitted. Keep generation disabled and publishing disabled. A provider's visible watermark remains acceptable, but does not override commercial licensing, quota, API, or billing requirements.
+
+
+## Free.ai official recheck (2026-10-18)
+
+A fresh review of the current official product, API, Terms and Privacy pages found more positive detail, but the API is still **not approved for automation**:
+
+- The text-to-video product page describes self-hosted CogVideoX on A100 GPUs, 2–6 second clips, native 9:16, no watermark, and commercial use. It says a 4-second clip is about 10,000 tokens and advertises 30,000 free tokens/day for signed-in accounts; anonymous visitors share a daily pool.
+- The API page lists CogVideoX at 5,000 tokens/video and a Free pool of 30,000 tokens/day with 10 requests/minute. However, its API onboarding text says “Purchase tokens” to generate an API key, its quick-start video example is explicitly a premium Kling model, and the video page says API token costs match the web interface. The pricing page also lists a 15,000-token minimum and additional per-second cost. These are material unresolved contradictions; do not budget from the lowest displayed figure.
+- The product page's commercial-use claim is consistent with the Terms' statement that self-hosted model outputs may be used commercially. The Terms prohibit multiple accounts to bypass limits and permit automated scripts only through the published API.
+- The Privacy Policy says prompts and outputs are stored as generation history, are not used to train models without explicit consent, and self-hosted model data remains on Free.ai servers rather than being sent to a third-party model provider.
+- A 2–6 second clip does not meet the project's 8–12 second finished-video target by itself. Multiple clips or extension would be needed, and the free quota/cost for that workflow is not established.
+
+Official sources checked:
+- https://free.ai/video/text-to-video/
+- https://free.ai/api/
+- https://free.ai/pricing/
+- https://free.ai/terms/
+- https://free.ai/privacy/
+
+**Decision:** Free.ai remains a research candidate, not an approved provider. The current pages do not conclusively establish that a free account can create an API key and call the self-hosted CogVideoX route without purchasing tokens, nor do they provide one consistent clip cost/quota contract. Do not create an account, request a key, submit a generation request, or integrate it. No API request or generation was made during this review. Keep generation and publishing disabled.

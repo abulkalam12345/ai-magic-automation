@@ -73,7 +73,7 @@ def main() -> int:
         for error in errors:
             print(f"- {error}")
         return 1
-    print("Preflight passed. Provider-specific generation is not implemented by this check.")
+    print("Configuration safety checks passed only. This does not approve a provider or start generation/publishing.")
     return 0
 
 

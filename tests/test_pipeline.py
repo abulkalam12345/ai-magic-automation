@@ -31,6 +31,20 @@ class PreflightTests(unittest.TestCase):
         settings["publishing"]["enabled"] = True
         self.assertTrue(any("Publishing must remain disabled" in e for e in pipeline.preflight(settings)))
 
+    def test_malformed_settings_sections_fail_closed(self):
+        for section in ("project", "generation", "publishing", "character"):
+            for value in (None, [], "invalid", True):
+                settings = valid_settings()
+                settings[section] = value
+                with self.subTest(section=section, value=value):
+                    errors = pipeline.preflight(settings)
+                    self.assertTrue(any(section in error for error in errors))
+
+    def test_non_object_root_is_rejected(self):
+        for value in (None, [], "invalid", True):
+            with self.subTest(value=value):
+                self.assertTrue(pipeline.preflight(value))
+
     def test_missing_provider_is_rejected(self):
         settings = valid_settings()
         settings["generation"]["provider"] = "not-configured"

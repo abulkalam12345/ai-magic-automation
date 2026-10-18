@@ -50,7 +50,8 @@ def load_metadata(path: Path) -> dict[str, Any]:
         raise ValueError("Only WonderVexa metadata is accepted.")
     if data.get("status") != "draft":
         raise ValueError("Only a draft package can be considered by this adapter.")
-    if data.get("publishing", {}).get("enabled") is not False:
+    publishing = data.get("publishing")
+    if not isinstance(publishing, dict) or publishing.get("enabled") is not False:
         raise ValueError("Draft metadata must keep publishing disabled.")
     for key in ("title", "description"):
         if not isinstance(data.get(key), str) or not data[key].strip():

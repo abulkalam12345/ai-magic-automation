@@ -7,6 +7,7 @@ import math
 import shutil
 import subprocess
 import tempfile
+from functools import lru_cache
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -44,8 +45,8 @@ def _wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont,
     return lines
 
 
-def render_frame(index: int, title: str, premise: str) -> Image.Image:
-    t = index / FPS
+@lru_cache(maxsize=1)
+def _background() -> Image.Image:
     image = Image.new("RGB", (WIDTH, HEIGHT))
     pixels = image.load()
     for y in range(HEIGHT):
@@ -57,6 +58,12 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
             pixels[x, y] = (min(255, int(base[0] + 8*glow)),
                             min(255, int(base[1] + 24*glow)),
                             min(255, int(base[2] + 55*glow)))
+    return image
+
+
+def render_frame(index: int, title: str, premise: str) -> Image.Image:
+    t = index / FPS
+    image = _background().copy()
     draw = ImageDraw.Draw(image, "RGBA")
     cx, cy = WIDTH // 2, int(HEIGHT * .48)
     pulse = 1 + .035 * math.sin(t * math.tau / 2.5)
@@ -96,50 +103,3 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
               font=brand_font, fill=(235, 245, 255, 220))
     return image
 
-
-def render(package: Path, output: Path, thumbnail: Path) -> None:
-    metadata_path = package / "metadata.json"
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    if metadata.get("channel") != "WonderVexa" or metadata.get("status") != "draft":
-        raise ValueError("Expected a WonderVexa draft package.")
-    title = str(metadata.get("topic", "")).strip()
-    premise = str(metadata.get("premise", "")).strip()
-    if not title or not premise:
-        raise ValueError("Draft metadata must contain topic and premise.")
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise RuntimeError("FFmpeg is required.")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    thumbnail.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="wondervexa-motion-") as temp:
-        temp_path = Path(temp)
-        for i in range(FRAMES):
-            frame = render_frame(i, title, premise)
-            frame.save(temp_path / f"frame-{i:04d}.png", optimize=False)
-        last = render_frame(FRAMES - 1, title, premise)
-        last.resize((1080, 1920), Image.Resampling.LANCZOS).save(thumbnail, format="PNG")
-        command = [
-            ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
-            "-framerate", str(FPS), "-i", str(temp_path / "frame-%04d.png"),
-            "-vf", "scale=1080:1920:flags=lanczos,format=yuv420p",
-            "-frames:v", str(FRAMES), "-an", "-c:v", "libx264",
-            "-preset", "veryfast", "-crf", "22", "-movflags", "+faststart",
-            str(output),
-        ]
-        subprocess.run(command, check=True, timeout=600)
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--package", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--thumbnail", type=Path, required=True)
-    args = parser.parse_args()
-    render(args.package, args.output, args.thumbnail)
-    print(f"Created procedural motion-graphics MP4: {args.output}")
-    print(f"Created thumbnail: {args.thumbnail}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

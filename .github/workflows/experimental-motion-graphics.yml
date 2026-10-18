@@ -1,0 +1,49 @@
+name: WonderVexa experimental motion-graphics proof
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wondervexa-motion-proof
+  cancel-in-progress: false
+
+jobs:
+  render-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install free local rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg fonts-dejavu-core
+          python -m pip install --disable-pip-version-check Pillow
+      - name: Create today's offline draft package
+        run: |
+          python src/content_factory.py --slot morning --date "$(TZ=Asia/Kathmandu date +%F)" --output output/motion-drafts --history output/motion-used-topics.json
+          PACKAGE="$(find output/motion-drafts -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          echo "PACKAGE=$PACKAGE" >> "$GITHUB_ENV"
+      - name: Validate source draft
+        run: python src/draft_package_check.py "$PACKAGE"
+      - name: Render original procedural animation
+        run: |
+          python src/motion_graphics_renderer.py --package "$PACKAGE" --output output/motion-proof/wondervexa-proof.mp4 --thumbnail output/motion-proof/thumbnail.png
+      - name: Run technical MP4 and thumbnail checks
+        run: python src/media_quality_check.py --video output/motion-proof/wondervexa-proof.mp4 --thumbnail output/motion-proof/thumbnail.png
+      - name: Upload proof artifact (no publishing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wondervexa-motion-graphics-proof-${{ github.run_id }}
+          path: |
+            output/motion-drafts/
+            output/motion-proof/
+          if-no-files-found: error
+          retention-days: 7

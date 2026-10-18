@@ -101,8 +101,34 @@ def build_request_body(metadata: dict[str, Any], *, public: bool = False) -> dic
     }
 
 
+def validate_upload_metadata(metadata: dict[str, Any]) -> None:
+    """Re-check critical draft invariants at the upload boundary."""
+    if not isinstance(metadata, dict):
+        raise ValueError("Upload metadata must be an object.")
+    if metadata.get("channel") != "WonderVexa":
+        raise ValueError("Only WonderVexa metadata is accepted.")
+    if metadata.get("status") != "draft":
+        raise ValueError("Only draft metadata is accepted.")
+    publishing = metadata.get("publishing")
+    if not isinstance(publishing, dict) or publishing.get("enabled") is not False:
+        raise ValueError("Draft metadata must keep publishing disabled.")
+    title = metadata.get("title")
+    description = metadata.get("description")
+    if not isinstance(title, str) or not title.strip() or len(title) > MAX_TITLE_LENGTH:
+        raise ValueError("Upload title must be non-empty and at most 100 characters.")
+    if (not isinstance(description, str) or not description.strip()
+            or len(description) > MAX_DESCRIPTION_LENGTH):
+        raise ValueError("Upload description must be non-empty and at most 5000 characters.")
+    tags = metadata.get("_youtube_tags", [])
+    if (not isinstance(tags, list) or len(tags) > MAX_TAGS
+            or any(not isinstance(tag, str) or not tag.strip() for tag in tags)):
+        raise ValueError("Prepared YouTube tags must be a valid array of at most 500 strings.")
+
+
 def upload_video(video_path: Path, metadata: dict[str, Any], *, public: bool = False) -> str:
     """Upload one MP4 using an OAuth authorized-user token supplied as a secret."""
+    validate_video(video_path)
+    validate_upload_metadata(metadata)
     require_upload_gates(public=public)
     token_json = os.environ.get("YOUTUBE_OAUTH_TOKEN_JSON", "")
     if not token_json:

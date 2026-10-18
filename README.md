@@ -8,6 +8,8 @@ The main branch contains a once-daily **draft-package** workflow. It creates scr
 
 The RSS/Atom research adapter is implemented and wired into the scheduled workflow, but is disabled until public feed sources are reviewed and approved. RSS items are research signals, not verified social-platform trends.
 
+A fail-closed YouTube Data API uploader scaffold is now present. It defaults to dry-run, requires separate runtime gates and OAuth token JSON, and is not connected to the scheduled workflow. No upload has been attempted.
+
 ## Safety and budget rules
 
 - Target budget: NPR 0. Use only sources with documented no-cost terms.
@@ -15,7 +17,7 @@ The RSS/Atom research adapter is implemented and wired into the scheduled workfl
 - Never silently enable paid billing, paid fallback, auto-recharge, or a payment method.
 - Never commit API secrets or credentials.
 - Video generation stays disabled until a provider passes the evidence gate and the user explicitly approves a specific test.
-- No automatic uploads. Require explicit approval for each final video and its selected destinations.
+- Unattended daily publishing is the requested end state where official platform rules permit; publishing remains disabled until OAuth, app review/audit, account eligibility and zero-cost gates pass.
 - Keep the separate Nepal News automation project out of scope.
 - Viral performance cannot be guaranteed.
 
@@ -40,6 +42,7 @@ Local FFmpeg utilities can assemble already-generated, licensed clips, add the W
 - [Trend research adapter](docs/TREND_RESEARCH.md)
 - [Video provider evidence gate](docs/VIDEO_PROVIDER_GATE.md)
 - [Official platform publishing gate](docs/PLATFORM_PUBLISHING_GATE.md)
+- [YouTube uploader (fail-closed; not activated)](docs/YOUTUBE_UPLOADER.md)
 - [Chinese AI video tools assessment](docs/CHINESE_VIDEO_TOOLS_ASSESSMENT.md)
 - [First proof storyboard — Wilted Flower Restoration](docs/FIRST_PROOF_STORYBOARD.md)
 - [First proof two-clip generation plan](docs/FIRST_PROOF_CLIP_PLAN.md)

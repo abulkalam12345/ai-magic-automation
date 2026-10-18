@@ -44,6 +44,7 @@ Local FFmpeg utilities can assemble already-generated, licensed clips, add the W
 - [Official platform publishing gate](docs/PLATFORM_PUBLISHING_GATE.md)
 - [YouTube uploader (fail-closed; not activated)](docs/YOUTUBE_UPLOADER.md)
 - [Chinese AI video tools assessment](docs/CHINESE_VIDEO_TOOLS_ASSESSMENT.md)
+- [Claude Free creative workflow (manual; zero-budget)](docs/CLAUDE_FREE_CREATIVE_WORKFLOW.md)
 - [First proof storyboard — Wilted Flower Restoration](docs/FIRST_PROOF_STORYBOARD.md)
 - [First proof two-clip generation plan](docs/FIRST_PROOF_CLIP_PLAN.md)
 - [Project plan](docs/PROJECT_PLAN.md)

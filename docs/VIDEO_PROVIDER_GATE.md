@@ -227,3 +227,22 @@ Official sources checked:
 - https://free.ai/privacy/
 
 **Decision:** Free.ai remains a research candidate, not an approved provider. The current pages do not conclusively establish that a free account can create an API key and call the self-hosted CogVideoX route without purchasing tokens, nor do they provide one consistent clip cost/quota contract. Do not create an account, request a key, submit a generation request, or integrate it. No API request or generation was made during this review. Keep generation and publishing disabled.
+
+
+## API free-pool clarification (2026-10-18)
+
+A further review of the current official Free.ai homepage, API page, Docs FAQ, and Pricing page makes the API blocker clearer:
+
+- The homepage FAQ says a confirmed free account receives 30,000 tokens/day but is limited to **one video every two days**; a video costs the full 30,000-token pool.
+- The Pricing page conflicts by listing a free per-day cap of one video clip and a 15,000-token minimum plus per-second charges. Do not choose the more generous statement while official pages disagree.
+- The API page says **“Purchase tokens, then generate your API key”** and its example video call uses a premium Kling model.
+- The current Docs FAQ explicitly says the daily free token pool applies to **web requests, not API calls**. Free API accounts have a monthly request cap, but the docs do not establish a free API video-token allowance.
+- Therefore, the free website allowance cannot be assumed to fund GitHub Actions API calls. A free API request quota is not the same as free video-generation credits.
+
+Official sources:
+- https://free.ai/ — homepage FAQ and one-video-every-two-days cap.
+- https://free.ai/api/ — API key/token purchase flow and video example.
+- https://free.ai/docs/ — daily free pool is web-only, not API.
+- https://free.ai/pricing/ — conflicting pricing-page clip cap/cost.
+
+**Updated decision:** Free.ai is rejected for unattended zero-budget API automation. Do not create an API key, buy tokens, submit an API request, or integrate it. The website may remain a possible manually operated experiment only if the user independently confirms the displayed free cost and accepts the two-day cap; it cannot meet the one-video-per-day target. No account, key, request, or generation was made during this recheck. Keep generation and publishing disabled.

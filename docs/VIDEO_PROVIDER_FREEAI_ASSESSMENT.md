@@ -91,3 +91,15 @@ The current official pages add useful details but do not resolve the API eligibi
 **Not approved for API automation.** Free.ai is worth keeping on the research watchlist because its current product and Terms make a stronger commercial-use case for self-hosted CogVideoX than previously documented. However, do not create an account, request an API key, submit a generation request, or integrate it until official support/current account documentation confirms: (a) free API key creation without token purchase, (b) exact self-hosted model ID and API route, (c) exact charge and hard-stop behavior for a 4–6 second clip, (d) daily API clip cap, and (e) the no-payment/no-paid-fallback behavior.
 
 No account was created, no email submitted, no API key requested, no API request made, no tokens consumed, and no video generated during this recheck. Generation and publishing remain disabled.
+
+
+## API free-pool clarification (2026-10-18)
+
+A further review of the official [homepage](https://free.ai/), [API page](https://free.ai/api/), [Docs FAQ](https://free.ai/docs/), and [Pricing page](https://free.ai/pricing/) confirms a decisive automation blocker:
+
+- The homepage says the free account's 30,000-token daily pool is limited to one video every two days, with one video costing the entire 30,000-token pool.
+- The Pricing page conflicts, showing one video clip/day and a 15,000-token minimum plus per-second charges.
+- The API page says users must purchase tokens before generating an API key; its sample video request uses a premium Kling model.
+- The Docs FAQ explicitly says the daily free pool applies to web requests, not API calls. A free monthly API request cap does not grant free video tokens.
+
+**Decision: reject Free.ai for unattended API automation at NPR 0.** The free web allowance cannot be assumed to apply to API jobs, and the website's video-frequency statements conflict. Do not create an API key, buy tokens, submit an API request, or integrate it. A manual website experiment would be user-operated, at most one clip every two days according to the homepage, and still would not meet the daily target. No account, key, API call, or video generation occurred during this review. Generation and publishing remain disabled.

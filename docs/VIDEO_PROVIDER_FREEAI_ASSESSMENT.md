@@ -68,3 +68,26 @@ Current official references checked:
 **Updated decision: do not approve Free.ai for WonderVexa's scheduled generation.** Its official quota/frequency statements conflict, and one clip consumes the entire stated daily token pool, leaving no retry headroom. The two-day limit shown on some official pages would also fail the target. Do not create an account, request an API key, generate a test clip, or integrate it into GitHub Actions unless the user explicitly approves a test after the quota and terms are reconciled. No account/API activity has been performed.
 
 Older quota/cost statements elsewhere in this document are historical snapshots and are superseded by this dated recheck. The generation gate remains disabled.
+
+
+## Official recheck (2026-10-18)
+
+The current official pages add useful details but do not resolve the API eligibility/cost contradiction:
+
+### Positive evidence
+- The [text-to-video product page](https://free.ai/video/text-to-video/) says its default self-hosted model is CogVideoX running on Free.ai A100 GPUs; it advertises 2–6 second MP4 clips, 9:16 portrait, no watermark, and commercial use. It says a 4-second clip is approximately 10,000 tokens and signed-in accounts receive 30,000 free tokens/day (anonymous visitors share a daily pool).
+- The [API pricing table](https://free.ai/api/) lists CogVideoX at 5,000 tokens/video, Free at 30,000 tokens/day and 10 API requests/minute. The API FAQ says Free accounts get the daily pool and receive HTTP 402 when tokens are exhausted.
+- The [Terms](https://free.ai/terms/) state self-hosted outputs may be used commercially and prohibit multiple accounts to bypass limits. Automated scripts/bots are permitted only through the published API.
+- The [Privacy Policy](https://free.ai/privacy/) says prompts and outputs are stored as generation history, are not used to train AI models without explicit consent, and self-hosted model data stays on Free.ai servers rather than being forwarded to a third-party AI provider.
+
+### Unresolved blockers
+1. API onboarding at the top of the API page says “Purchase tokens” to generate an API key, while the same page's Free plan/FAQ advertises 30K free tokens/day and says the API shares the same balance as the website.
+2. The API quick-start video example is a premium Kling model; the page does not make the no-cost self-hosted CogVideoX API route sufficiently explicit in that example.
+3. Token costs conflict: API table says 5,000 tokens/video; text-to-video page says approximately 10,000 tokens for 4 seconds; the pricing page lists a 15,000-token minimum plus additional per-second cost. Do not assume the cheapest figure.
+4. Product clips are only 2–6 seconds. The 8–12 second target requires multiple clips or extension; cost, daily cap and continuity performance for that workflow are not established.
+5. The pages do not establish a guaranteed daily API video quota with enough retry headroom for unattended production.
+
+### Decision
+**Not approved for API automation.** Free.ai is worth keeping on the research watchlist because its current product and Terms make a stronger commercial-use case for self-hosted CogVideoX than previously documented. However, do not create an account, request an API key, submit a generation request, or integrate it until official support/current account documentation confirms: (a) free API key creation without token purchase, (b) exact self-hosted model ID and API route, (c) exact charge and hard-stop behavior for a 4–6 second clip, (d) daily API clip cap, and (e) the no-payment/no-paid-fallback behavior.
+
+No account was created, no email submitted, no API key requested, no API request made, no tokens consumed, and no video generated during this recheck. Generation and publishing remain disabled.

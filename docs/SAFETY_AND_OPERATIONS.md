@@ -18,8 +18,10 @@ This repository is only for WonderVexa video automation. Do not inspect, modify,
 
 ## Publishing
 - Intended destinations: YouTube Shorts, Facebook Reels, TikTok and Instagram Reels.
-- Draft generation does not publish. Automatic publishing remains disabled.
-- Require explicit approval for each final video and selected destinations before any upload.
+- Draft generation does not publish. Automatic publishing remains disabled until official API eligibility, account OAuth, required app reviews/audits, and zero-cost operation are verified.
+- Target behavior requested by the user is unattended daily publishing without a daily manual posting step wherever platform rules permit; this replaces the earlier per-video approval preference as the desired end state.
+- Do not bypass platform-mandated consent. TikTok Direct Post requires creator-facing controls and express consent for each post, and unaudited apps are restricted to private visibility.
+- Never publish an unreviewed, failed or unavailable render. Keep all platform switches off until the relevant gates pass.
 - Never publish an unreviewed, failed or unavailable render.
 - Use official platform APIs/OAuth only; never use browser automation or credential scraping.
 - Respect music, image, model and dataset licenses. Disclose synthetic content when policy requires it.

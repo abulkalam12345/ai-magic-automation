@@ -19,6 +19,7 @@ Target behavior requested by the user: one daily video should be generated and p
 6. Provider-neutral RSS/Atom research adapter and research-only story brief generator, integrated into the workflow but disabled until reviewed feed sources are configured.
 7. Local FFmpeg assembly, subtitle workflow and MP4/PNG technical quality checks for already-generated source media.
 8. Fail-closed video-provider evidence manifest validator.
+9. Fail-closed YouTube Data API uploader scaffold with dry-run default, private-by-default behavior, separate public-upload gate, and unit tests. It is not wired into the daily workflow and has not made an API request.
 
 ## Not complete / blocked
 - No reviewed RSS/Atom sources are enabled; research automation therefore produces no live-feed signals by default. The offline idea bank is evergreen content, not live trend detection.

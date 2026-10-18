@@ -164,15 +164,15 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
 
 ## Voiceover / on-screen story
 - 0–2s — Hook: {hook}
-- 2–5s — Show the magical problem and build anticipation.
-- 5–8s — Reveal the transformation with a clear visual action.
-- 8–10s — Hold on the beautiful result; show the WonderVexa brand.
+- 2–5s — Build: Show the obstacle or unfinished state described in the concept; introduce one clear magical trigger.
+- 5–8s — Change: Show the named subject visibly changing into the result promised by the concept.
+- 8–10s — Payoff: Hold on the completed result long enough to understand it; show the WonderVexa brand.
 
 ## Shot list
-1. Vertical close-up establishing the subject and its problem.
-2. A hand-free magical energy swirl approaches; keep the subject consistent.
-3. The transformation happens in one readable continuous action.
-4. Final hero shot with clean space for the WonderVexa watermark.
+1. Establish the exact subject and its starting state from the concept.
+2. Show one simple, story-relevant magical trigger; avoid unrelated props.
+3. Show one continuous, readable before-to-after transformation while preserving subject identity.
+4. Hold the finished result in a clean hero frame with safe space for the WonderVexa watermark.
 
 ## Generation / editing notes
 - Original fictional visuals only; do not imitate a living artist or existing franchise.
@@ -196,13 +196,13 @@ Use the exact same central subject, silhouette, colors, proportions, and environ
 Create a vertical 9:16 cinematic macro establishing shot for this story: {premise}. Show the subject clearly in its initial state, with the problem immediately understandable. Use a simple uncluttered background, gentle camera movement, soft depth of field, and restrained moonlit blue lighting. Keep the subject centered and fully inside frame.
 
 ## Scene 2 — Magic arrives (2–5 seconds)
-Continue with the identical subject and environment from Scene 1. A delicate blue-and-gold magical energy ring approaches and circles the subject once. A few controlled glowing particles move toward the subject. Keep the transformation readable and avoid covering the subject with effects. Use a subtle slow push-in; do not change species, shape, scale, or camera orientation.
+Continue with the identical subject and environment from Scene 1. Introduce one restrained magical trigger that fits this specific story (for example, a small spark, soft ripple, or gentle glow). Let it interact with the central subject without obscuring it. Keep the original problem or starting state visible so the viewer understands what is about to change. Use a subtle slow push-in; do not change species, shape, scale, or camera orientation.
 
 ## Scene 3 — Transformation reveal (5–8 seconds)
-Continue seamlessly with the same subject, framing, and lighting. Show one continuous, physically coherent transformation that visually communicates this story: {premise}. The change should progress gradually from the original state to the improved magical state. No jump cuts, sudden replacement, duplicated subjects, or abrupt camera movement.
+Continue seamlessly with the same subject, framing, and lighting. Show the exact subject from the premise changing in one continuous, physically coherent action into the specific result described there. Make the before-and-after difference unmistakable; do not add a second unrelated transformation. No jump cuts, sudden replacement, duplicated subjects, or abrupt camera movement.
 
 ## Scene 4 — Final hero shot (8–10 seconds)
-Hold on the completed magical result of this story: {hook} Keep the same subject identity and environment. Show the full result clearly with elegant blue-and-gold highlights, a few fading particles, and clean negative space in the lower-right safe area for a separately added WonderVexa watermark. Stable composition; no baked-in text or logo.
+Hold on the completed magical result of this story: {hook} Keep the same subject identity and environment. Show the full result clearly with lighting and colors that complement this story, a few restrained fading particles, and clean negative space in the lower-right safe area for a separately added WonderVexa watermark. Stable composition; no baked-in text or logo.
 
 ## Negative prompt
 Low resolution, landscape framing, cropped subject, inconsistent subject identity, extra subjects, duplicate limbs or parts, deformed anatomy, flicker, jitter, rapid camera spins, jump cuts, abrupt morphing, chaotic particles, excessive bloom, strobing, unreadable text, subtitles, logos, signatures, watermarks, borders, copyrighted characters, imitation of a living artist.

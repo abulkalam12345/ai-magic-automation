@@ -22,7 +22,7 @@ This repository is only for WonderVexa video automation. Do not inspect, modify,
 - Target behavior requested by the user is unattended daily publishing without a daily manual posting step wherever platform rules permit; this replaces the earlier per-video approval preference as the desired end state.
 - Do not bypass platform-mandated consent. TikTok Direct Post requires creator-facing controls and express consent for each post, and unaudited apps are restricted to private visibility.
 - Never publish an unreviewed, failed or unavailable render. Keep all platform switches off until the relevant gates pass.
-- Never publish an unreviewed, failed or unavailable render.
+- See [Platform Publishing Gate](PLATFORM_PUBLISHING_GATE.md) for verified API prerequisites and current blockers.
 - Use official platform APIs/OAuth only; never use browser automation or credential scraping.
 - Respect music, image, model and dataset licenses. Disclose synthetic content when policy requires it.
 

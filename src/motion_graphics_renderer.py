@@ -113,7 +113,7 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
                   stroke_width=2, stroke_fill=(25, 55, 100, 255))
         y0 += 62
     small = _font(22)
-    tagline = "A LITTLE MOMENT OF WONDER"
+    tagline = "A LITTLE DAILY MOMENT OF WONDER"
     box = draw.textbbox((0, 0), tagline, font=small)
     draw.text(((WIDTH-(box[2]-box[0]))/2, y0+8), tagline,
               font=small, fill=(155, 220, 255, 255))

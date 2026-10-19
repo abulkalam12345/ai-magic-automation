@@ -2,6 +2,11 @@ name: WonderVexa experimental motion-graphics proof
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - src/motion_graphics_renderer.py
 
 permissions:
   contents: read

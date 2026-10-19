@@ -241,7 +241,7 @@ def main() -> int:
                 str(args.output),
             ]
             with tempfile.TemporaryFile() as error_log:
-                    process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=error_log)
+                process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=error_log)
                 assert process.stdin is not None
                 try:
                     for index in range(FRAMES):

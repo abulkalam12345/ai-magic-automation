@@ -187,6 +187,26 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
               font=brand_font, fill=(235, 245, 255, 220))
     return image
 
+
+def build_narration(title: str, premise: str, max_chars: int = 130) -> str:
+    """Build a concise narration line that fits the ten-second proof video."""
+    clean_title = " ".join(title.split()).strip(" .!?")
+    clean_premise = " ".join(premise.split())
+    if not clean_title:
+        raise ValueError("Narration title must not be empty.")
+    title_budget = max(1, max_chars - 3)
+    if len(clean_title) > title_budget:
+        clean_title = clean_title[:title_budget].rsplit(" ", 1)[0] or clean_title[:title_budget]
+    remaining = max_chars - len(clean_title) - 2
+    if remaining <= 0 or not clean_premise:
+        return clean_title + "."
+    if len(clean_premise) > remaining:
+        clipped = clean_premise[:max(1, remaining - 1)].rsplit(" ", 1)[0]
+        clean_premise = (clipped or clean_premise[:remaining - 1]).rstrip(" .,;:") + "…"
+    return f"{clean_title}. {clean_premise}"
+
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", required=True, type=Path,
@@ -223,9 +243,9 @@ def main() -> int:
             narration_path = Path(audio_dir) / "narration.wav"
             # eSpeak NG is an offline open-source synthesizer; no API, account,
             # paid quota, or network request is used. Keep narration concise.
-            narration = f"{title}. {premise}"
+            narration = build_narration(title, premise)
             subprocess.run(
-                [tts, "-v", "en-us", "-s", "145", "-w", str(narration_path), narration],
+                [tts, "-v", "en-us", "-s", "175", "-w", str(narration_path), narration],
                 check=True, capture_output=True, text=True, timeout=60,
             )
             command = [

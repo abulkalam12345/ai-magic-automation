@@ -31,5 +31,20 @@ class NarrationTimingTests(unittest.TestCase):
         self.assertTrue(text.endswith("."))
 
 
+
+class FadeTransitionTests(unittest.TestCase):
+    def test_fade_is_black_at_video_start_and_end(self):
+        self.assertEqual(renderer.fade_factor(0), 0.0)
+        self.assertEqual(renderer.fade_factor(renderer.DURATION), 0.0)
+
+    def test_fade_reaches_full_opacity_in_middle(self):
+        self.assertEqual(renderer.fade_factor(2.0), 1.0)
+        self.assertEqual(renderer.fade_factor(8.0), 1.0)
+
+    def test_fade_configuration_must_be_valid(self):
+        with self.assertRaises(ValueError):
+            renderer.fade_factor(1.0, duration=1.0, fade_seconds=0.6)
+
+
 if __name__ == "__main__":
     unittest.main()

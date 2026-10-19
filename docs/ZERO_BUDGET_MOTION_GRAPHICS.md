@@ -7,8 +7,8 @@ The repository is public. GitHub documents standard GitHub-hosted runners as fre
 The manually triggered workflow `.github/workflows/experimental-motion-graphics.yml`:
 1. Creates a normal offline WonderVexa draft package.
 2. Uses Pillow to draw an original seed-to-sapling-to-golden-tree progression, warm halo, floating motes, story premise captions, title text and a small text-only WonderVexa mark. eSpeak NG adds a short offline English narration track.
-3. Uses FFmpeg to encode a silent 10-second, 1080x1920 H.264 MP4 and a PNG thumbnail.
-4. Runs the existing technical media checker and uploads a short-lived artifact.
+3. Uses FFmpeg to encode a 10-second, 1080x1920 H.264 MP4 with AAC narration and a PNG thumbnail.
+4. Runs the technical media checker with the AAC-audio requirement enabled and uploads a short-lived artifact.
 
 It makes no external AI/API calls, downloads no stock footage, needs no credentials, does not publish, and does not alter the existing daily draft workflow.
 

@@ -61,26 +61,88 @@ def _background() -> Image.Image:
     return image
 
 
+def _draw_growth_tree(draw: ImageDraw.ImageDraw, cx: int, ground: int,
+                      growth: float, t: float) -> None:
+    """Draw a seed-to-sapling-to-golden-tree progression using vector strokes."""
+    growth = max(0.0, min(1.0, growth))
+    if growth < 0.10:
+        # A small seed rests in a pool of warm light before it sprouts.
+        r = 9 + int(5 * math.sin(t * 4) ** 2)
+        draw.ellipse((cx-r, ground-r, cx+r, ground+r//2),
+                     fill=(143, 91, 42, 255), outline=(255, 207, 105, 255), width=3)
+        return
+
+    trunk_height = int(300 * growth)
+    top = ground - trunk_height
+    bend = int(24 * math.sin(t * .8) * growth)
+    points = []
+    for step in range(13):
+        p = step / 12
+        y = ground - int(trunk_height * p)
+        x = cx + int(bend * p * p)
+        points.append((x, y))
+    # Draw the trunk in short tapered sections.
+    for i in range(len(points)-1):
+        width = max(3, int((20 - 13 * (i / 12)) * growth))
+        draw.line((points[i], points[i+1]), fill=(151, 91, 43, 255), width=width)
+    draw.ellipse((cx-30, ground-5, cx+30, ground+8),
+                 fill=(106, 72, 42, 180))
+
+    branch_specs = [
+        (-1, .28, .50), (1, .34, .57), (-1, .52, .72),
+        (1, .62, .78), (-1, .77, .88), (1, .82, .94),
+    ]
+    leaf_tips = []
+    for side, start_p, end_p in branch_specs:
+        if growth < start_p:
+            continue
+        amount = min(1.0, (growth-start_p) / max(.01, end_p-start_p))
+        y0 = ground - int(trunk_height * (start_p * .82))
+        x0 = cx + int(bend * (start_p * .82) ** 2)
+        length = int((72 + 18 * (start_p > .7)) * amount)
+        x1 = x0 + side * length
+        y1 = y0 - int(length * .52)
+        draw.line((x0, y0, x1, y1), fill=(151, 91, 43, 255),
+                  width=max(2, int(8 * growth)))
+        leaf_tips.append((x1, y1, side))
+    # Crown foliage unfolds in stages, with gently moving golden leaves.
+    if growth > .38:
+        leaf_count = int(8 + 34 * min(1.0, (growth-.38)/.62))
+        for n in range(leaf_count):
+            angle = n * 2.399 + t * .12
+            radius = (18 + (n % 7) * 10) * min(1.0, growth)
+            x = cx + int(math.cos(angle) * radius * 1.35 + bend)
+            y = top + 25 + int(math.sin(angle) * radius * .82)
+            size = 5 + (n % 3)
+            color = (255, 205 + n % 35, 76 + n % 40, 235)
+            draw.ellipse((x-size, y-size//2, x+size, y+size//2),
+                         fill=color, outline=(255, 237, 165, 210), width=1)
+    for x, y, side in leaf_tips:
+        sway = int(4 * math.sin(t * 2 + x))
+        draw.ellipse((x-8+sway, y-5, x+8+sway, y+5),
+                     fill=(255, 211, 91, 245), outline=(255, 239, 174, 220))
+    # Floating motes orbit the crown as the tree matures.
+    if growth > .55:
+        for n in range(18):
+            angle = n * math.tau / 18 + t * .35
+            radius = 155 + 10 * math.sin(t + n)
+            x = cx + int(math.cos(angle) * radius)
+            y = top + 95 + int(math.sin(angle) * radius * .48)
+            draw.ellipse((x-2, y-2, x+2, y+2),
+                         fill=(255, 226, 145, 190))
+
+
 def render_frame(index: int, title: str, premise: str) -> Image.Image:
     t = index / FPS
     image = _background().copy()
     draw = ImageDraw.Draw(image, "RGBA")
-    cx, cy = WIDTH // 2, int(HEIGHT * .48)
-    pulse = 1 + .035 * math.sin(t * math.tau / 2.5)
-    for ring in range(5):
-        radius = int((115 + ring * 39) * pulse + 9 * math.sin(t * 2 + ring))
-        alpha = 150 - ring * 18
-        draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius),
-                     outline=(95, 190, 255, alpha), width=3 if ring else 7)
-    draw.ellipse((cx-86, cy-86, cx+86, cy+86), fill=(60, 150, 255, 28),
-                 outline=(175, 225, 255, 190), width=4)
-    for n in range(32):
-        angle = n * math.tau / 32 + t * (.25 if n % 2 else -.18)
-        radius = 245 + 18 * math.sin(t * 1.7 + n)
-        x = int(cx + math.cos(angle) * radius)
-        y = int(cy + math.sin(angle) * radius)
-        r = 3 + (n % 3)
-        draw.ellipse((x-r, y-r, x+r, y+r), fill=(170, 220, 255, 190))
+    cx, cy = WIDTH // 2, int(HEIGHT * .55)
+    growth = min(1.0, max(0.0, (t - .7) / 7.0))
+    _draw_growth_tree(draw, cx, cy + 205, growth, t)
+    # Warm halo grows with the tree; it is an original drawn effect, not footage.
+    halo = int(85 + 100 * growth)
+    draw.ellipse((cx-halo, cy-halo-35, cx+halo, cy+halo-35),
+                 outline=(255, 196, 85, int(45 + 75*growth)), width=3)
     # Story-led caption: use the actual draft premise rather than a generic tagline.
     caption_font = _font(25)
     caption_lines = _wrap(draw, premise.strip(), caption_font, WIDTH - 112)[:3]

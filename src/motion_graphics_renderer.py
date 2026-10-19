@@ -132,6 +132,16 @@ def _draw_growth_tree(draw: ImageDraw.ImageDraw, cx: int, ground: int,
                          fill=(255, 226, 145, 190))
 
 
+def fade_factor(t: float, duration: float = DURATION,
+                fade_seconds: float = 0.65) -> float:
+    """Return a smooth fade-in/out opacity for the rendered scene."""
+    if duration <= 0 or fade_seconds <= 0 or fade_seconds * 2 >= duration:
+        raise ValueError("Fade and duration values are invalid.")
+    fade_in = max(0.0, min(1.0, t / fade_seconds))
+    fade_out = max(0.0, min(1.0, (duration - t) / fade_seconds))
+    return min(fade_in, fade_out)
+
+
 def render_frame(index: int, title: str, premise: str) -> Image.Image:
     t = index / FPS
     image = _background().copy()
@@ -185,6 +195,9 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
     box = draw.textbbox((0, 0), brand, font=brand_font)
     draw.text((WIDTH-(box[2]-box[0])-28, HEIGHT-58), brand,
               font=brand_font, fill=(235, 245, 255, 220))
+    opacity = fade_factor(t)
+    if opacity < 1.0:
+        image = Image.blend(Image.new("RGB", image.size, (0, 0, 0)), image, opacity)
     return image
 
 
@@ -277,7 +290,7 @@ def main() -> int:
                     detail = error_log.read().decode("utf-8", errors="replace")[-2000:]
                     raise RuntimeError(f"FFmpeg render failed (exit {return_code}): {detail}")
 
-        final_frame = render_frame(FRAMES - 1, title, premise)
+        final_frame = render_frame(int(FPS * 8.8), title, premise)
         final_frame = final_frame.resize((1080, 1920), Image.Resampling.LANCZOS)
         final_frame.save(args.thumbnail, format="PNG", optimize=True)
     except (OSError, subprocess.SubprocessError, RuntimeError) as exc:

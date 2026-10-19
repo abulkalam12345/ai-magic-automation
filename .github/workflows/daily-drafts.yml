@@ -1,4 +1,4 @@
-name: WonderVexa daily draft package
+name: WonderVexa daily draft and motion render
 
 on:
   schedule:
@@ -23,7 +23,7 @@ concurrency:
 jobs:
   create-draft:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +31,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install free offline rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg fonts-dejavu-core espeak-ng
+          python -m pip install --disable-pip-version-check Pillow
       - name: Restore cross-run topic history
         uses: actions/cache/restore@v4
         with:
@@ -81,6 +86,19 @@ jobs:
           for metadata in "${packages[@]}"; do
             python src/draft_package_check.py "$(dirname "$metadata")"
           done
+      - name: Render and technically validate each daily short
+        shell: bash
+        run: |
+          shopt -s nullglob
+          packages=(output/drafts/*/metadata.json)
+          for metadata in "${packages[@]}"; do
+            package="$(dirname "$metadata")"
+            slug="$(basename "$package")"
+            video="output/daily-renders/$slug.mp4"
+            thumbnail="output/daily-renders/$slug.png"
+            python src/motion_graphics_renderer.py --package "$package" --output "$video" --thumbnail "$thumbnail"
+            python src/media_quality_check.py --video "$video" --thumbnail "$thumbnail" --require-audio
+          done
       - name: Optional attributed RSS research (disabled until sources are approved)
         run: python src/scheduled_research.py --slot "${{ steps.slot.outputs.value }}"
       - name: Save updated topic history
@@ -88,12 +106,13 @@ jobs:
         with:
           path: output/used_topics.json
           key: wondervexa-topic-history-${{ github.run_id }}
-      - name: Save draft packages
+      - name: Save draft packages and rendered videos
         uses: actions/upload-artifact@v4
         with:
           name: wondervexa-${{ steps.slot.outputs.value }}-${{ github.run_id }}
           path: |
             output/drafts/
+            output/daily-renders/
             output/research-stories/
             output/trend-research/
           if-no-files-found: error

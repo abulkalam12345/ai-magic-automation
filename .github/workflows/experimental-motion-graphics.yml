@@ -29,7 +29,7 @@ jobs:
       - name: Install free local rendering tools
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y ffmpeg fonts-dejavu-core
+          sudo apt-get install --no-install-recommends -y ffmpeg fonts-dejavu-core espeak-ng
           python -m pip install --disable-pip-version-check Pillow
       - name: Create today's offline draft package
         run: |

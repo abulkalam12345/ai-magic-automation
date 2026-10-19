@@ -200,6 +200,9 @@ def main() -> int:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         parser.error("ffmpeg is required; install FFmpeg before rendering.")
+    tts = shutil.which("espeak-ng")
+    if not tts:
+        parser.error("espeak-ng is required for the offline narration track.")
 
     metadata_path = args.package / "metadata.json"
     try:
@@ -215,33 +218,44 @@ def main() -> int:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.thumbnail.parent.mkdir(parents=True, exist_ok=True)
-    command = [
-        ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
-        "-f", "rawvideo", "-pixel_format", "rgb24",
-        "-video_size", f"{WIDTH}x{HEIGHT}", "-framerate", str(FPS),
-        "-i", "-", "-an", "-vf", "scale=1080:1920:flags=lanczos",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        str(args.output),
-    ]
-
     try:
-        with tempfile.TemporaryFile() as error_log:
-            process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=error_log)
-            assert process.stdin is not None
-            try:
-                for index in range(FRAMES):
-                    frame = render_frame(index, title, premise)
-                    process.stdin.write(frame.tobytes())
-                process.stdin.close()
-            except (BrokenPipeError, OSError):
-                if process.stdin and not process.stdin.closed:
+        with tempfile.TemporaryDirectory(prefix="wondervexa-audio-") as audio_dir:
+            narration_path = Path(audio_dir) / "narration.wav"
+            # eSpeak NG is an offline open-source synthesizer; no API, account,
+            # paid quota, or network request is used. Keep narration concise.
+            narration = f"{title}. {premise}"
+            subprocess.run(
+                [tts, "-v", "en-us", "-s", "145", "-w", str(narration_path), narration],
+                check=True, capture_output=True, text=True, timeout=60,
+            )
+            command = [
+                ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
+                "-f", "rawvideo", "-pixel_format", "rgb24",
+                "-video_size", f"{WIDTH}x{HEIGHT}", "-framerate", str(FPS),
+                "-i", "-", "-i", str(narration_path),
+                "-vf", "scale=1080:1920:flags=lanczos",
+                "-map", "0:v:0", "-map", "1:a:0", "-t", str(DURATION),
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+                "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k",
+                "-af", "apad", "-shortest", "-movflags", "+faststart",
+                str(args.output),
+            ]
+            with tempfile.TemporaryFile() as error_log:
+                    process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=error_log)
+                assert process.stdin is not None
+                try:
+                    for index in range(FRAMES):
+                        frame = render_frame(index, title, premise)
+                        process.stdin.write(frame.tobytes())
                     process.stdin.close()
-            return_code = process.wait(timeout=600)
-            if return_code != 0:
-                error_log.seek(0)
-                detail = error_log.read().decode("utf-8", errors="replace")[-2000:]
-                raise RuntimeError(f"FFmpeg render failed (exit {return_code}): {detail}")
+                except (BrokenPipeError, OSError):
+                    if process.stdin and not process.stdin.closed:
+                        process.stdin.close()
+                return_code = process.wait(timeout=600)
+                if return_code != 0:
+                    error_log.seek(0)
+                    detail = error_log.read().decode("utf-8", errors="replace")[-2000:]
+                    raise RuntimeError(f"FFmpeg render failed (exit {return_code}): {detail}")
 
         final_frame = render_frame(FRAMES - 1, title, premise)
         final_frame = final_frame.resize((1080, 1920), Image.Resampling.LANCZOS)
@@ -250,7 +264,7 @@ def main() -> int:
         print(f"RENDER FAILED: {exc}")
         return 1
 
-    print(f"Rendered silent 10-second MP4: {args.output}")
+    print(f"Rendered 10-second MP4 with offline synthetic narration: {args.output}")
     print(f"Rendered 1080x1920 PNG thumbnail: {args.thumbnail}")
     return 0
 

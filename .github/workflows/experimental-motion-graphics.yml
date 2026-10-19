@@ -42,7 +42,7 @@ jobs:
         run: |
           python src/motion_graphics_renderer.py --package "$PACKAGE" --output output/motion-proof/wondervexa-proof.mp4 --thumbnail output/motion-proof/thumbnail.png
       - name: Run technical MP4 and thumbnail checks
-        run: python src/media_quality_check.py --video output/motion-proof/wondervexa-proof.mp4 --thumbnail output/motion-proof/thumbnail.png
+        run: python src/media_quality_check.py --video output/motion-proof/wondervexa-proof.mp4 --thumbnail output/motion-proof/thumbnail.png --require-audio
       - name: Upload proof artifact (no publishing)
         uses: actions/upload-artifact@v4
         with:

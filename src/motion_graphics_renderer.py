@@ -81,6 +81,28 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
         y = int(cy + math.sin(angle) * radius)
         r = 3 + (n % 3)
         draw.ellipse((x-r, y-r, x+r, y+r), fill=(170, 220, 255, 190))
+    # Story-led caption: use the actual draft premise rather than a generic tagline.
+    caption_font = _font(25)
+    caption_lines = _wrap(draw, premise.strip(), caption_font, WIDTH - 112)[:3]
+    caption_y = int(HEIGHT * .13)
+    for line in caption_lines:
+        box = draw.textbbox((0, 0), line, font=caption_font)
+        draw.text(((WIDTH-(box[2]-box[0]))/2, caption_y), line,
+                  font=caption_font, fill=(220, 237, 255, 245),
+                  stroke_width=1, stroke_fill=(10, 25, 55, 220))
+        caption_y += 38
+
+    # Three-act progress cue makes the short feel paced, without pretending
+    # that this procedural render contains generated footage.
+    bar_left, bar_right = 90, WIDTH - 90
+    bar_y = int(HEIGHT * .68)
+    draw.rounded_rectangle((bar_left, bar_y, bar_right, bar_y + 5),
+                           radius=3, fill=(85, 130, 175, 130))
+    progress = min(1.0, max(0.0, t / DURATION))
+    draw.rounded_rectangle((bar_left, bar_y,
+                            bar_left + int((bar_right-bar_left)*progress), bar_y+5),
+                           radius=3, fill=(170, 220, 255, 230))
+
     title_font = _font(48, True)
     lines = _wrap(draw, title.upper(), title_font, WIDTH - 80)[:2]
     y0 = int(HEIGHT * .76)

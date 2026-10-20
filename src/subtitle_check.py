@@ -18,22 +18,31 @@ def to_milliseconds(parts: tuple[str, ...]) -> int:
     return ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis
 
 
-def validate_srt(path: Path) -> list[str]:
-    errors: list[str] = []
-    try:
-        content = path.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeError) as exc:
-        return [f"cannot read UTF-8 subtitle file: {exc}"]
+def validate_srt(source: Path | str) -> list[str]:
+    """Accept a Path, a filename, or literal SRT text."""
+    if isinstance(source, Path):
+        try:
+            content = source.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeError) as exc:
+            return [f"cannot read UTF-8 subtitle file: {exc}"]
+    elif "\n" in source or "\r" in source:
+        content = source
+    else:
+        try:
+            content = Path(source).read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeError) as exc:
+            return [f"cannot read UTF-8 subtitle file: {exc}"]
 
-    blocks = re.split(r"\r?\n\s*\r?\n", content.strip())
     if not content.strip():
         return ["subtitle file is empty"]
 
+    blocks = re.split(r"\r?\n\s*\r?\n", content.strip())
+    errors: list[str] = []
     previous_end = -1
     for block_number, block in enumerate(blocks, start=1):
         lines = block.splitlines()
-        if len(lines) < 3:
-            errors.append(f"cue {block_number}: expected index, timestamp, and subtitle text")
+        if len(lines) < 2:
+            errors.append(f"cue {block_number}: expected index and timestamp")
             continue
         if lines[0].strip() != str(block_number):
             errors.append(f"cue {block_number}: cue index must be {block_number}")

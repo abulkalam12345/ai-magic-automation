@@ -2,6 +2,12 @@ name: WonderVexa Hindi video render proof
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/hindi-render-proof.yml"
+      - "examples/first-hindi-video/voiceover-hi.txt"
+      - "examples/first-hindi-video/captions-en.srt"
 
 permissions:
   contents: read
@@ -25,13 +31,15 @@ jobs:
           espeak-ng -v hi -s 145 -f examples/first-hindi-video/voiceover-hi.txt -w /tmp/wondervexa-hi.wav
           test -s /tmp/wondervexa-hi.wav
           ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /tmp/wondervexa-hi.wav
-      - name: Render vertical proof with burned English subtitles and brand text
+      - name: Render vertical proof with timed animated portal, English subtitles and brand text
         run: |
           mkdir -p output/hindi-proof
+          DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 /tmp/wondervexa-hi.wav)
+          echo "Hindi narration duration: ${DURATION}s"
           ffmpeg -y \
-            -f lavfi -i "color=c=0x07142e:s=1080x1920:r=30:d=60" \
+            -f lavfi -i "color=c=0x07142e:s=1080x1920:r=30:d=${DURATION}" \
             -i /tmp/wondervexa-hi.wav \
-            -vf "drawbox=x=180:y=350:w=720:h=720:color=0x168cff@0.12:t=18,drawbox=x=230:y=400:w=620:h=620:color=0x36c5ff@0.20:t=8,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='CAN TIME BE STOPPED?':fontcolor=white:fontsize=54:x=(w-text_w)/2:y=650:box=1:boxcolor=black@0.28:boxborderw=20,subtitles=examples/first-hindi-video/captions-en.srt:force_style='FontName=Noto Sans,FontSize=22,Alignment=2,MarginV=240,Outline=2,Shadow=1',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='WONDERVEXA':fontcolor=white@0.90:fontsize=34:x=(w-text_w)/2:y=h-120" \
+            -vf "drawbox=x=0:y=0:w=iw:h=ih:color=0x07142e@0.10:t=fill,drawbox=x=180:y=380:w=720:h=720:color=0x168cff@0.12:t=18,drawbox=x=230:y=430:w=620:h=620:color=0x36c5ff@0.20:t=8,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='CAN TIME BE STOPPED?':fontcolor=white:fontsize=54:x=(w-text_w)/2:y=650:box=1:boxcolor=black@0.28:boxborderw=20,subtitles=examples/first-hindi-video/captions-en.srt:force_style='FontName=Noto Sans,FontSize=22,Alignment=2,MarginV=240,Outline=2,Shadow=1',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='WONDERVEXA':fontcolor=white@0.90:fontsize=34:x=(w-text_w)/2:y=h-120" \
             -map 0:v:0 -map 1:a:0 -shortest \
             -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p \
             -c:a aac -b:a 128k -movflags +faststart \

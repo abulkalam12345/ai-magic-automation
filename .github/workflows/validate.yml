@@ -19,12 +19,21 @@ jobs:
           python-version: "3.11"
       - name: Install configuration parser
         run: python -m pip install --disable-pip-version-check PyYAML Pillow
-      - name: Install FFmpeg for local media integration tests
+      - name: Install free media and Hindi voice test tools
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y ffmpeg
+          sudo apt-get install --no-install-recommends -y ffmpeg espeak-ng fonts-noto-core
       - name: Validate first Hindi video English subtitles
         run: python src/subtitle_check.py examples/first-hindi-video/captions-en.srt
+      - name: Check offline Hindi speech synthesis availability
+        run: |
+          set -euo pipefail
+          espeak-ng --voices=hi
+          espeak-ng -v hi -s 145 -w /tmp/wondervexa-hindi-smoke.wav \
+            "क्या हो अगर समय रुक जाए?"
+          test -s /tmp/wondervexa-hindi-smoke.wav
+          ffprobe -v error -show_entries format=duration \
+            -of default=noprint_wrappers=1:nokey=1 /tmp/wondervexa-hindi-smoke.wav
       - name: Run safety tests
         run: python -m unittest discover -s tests -v
       - name: Check example configuration (expected not-ready until provider is verified)

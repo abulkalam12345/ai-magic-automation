@@ -1,0 +1,52 @@
+name: WonderVexa Hindi video render proof
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render-hindi-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install free offline Hindi rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg espeak-ng fonts-noto-core fonts-dejavu-core
+      - name: Validate English subtitle timings
+        run: python src/subtitle_check.py examples/first-hindi-video/captions-en.srt
+      - name: Generate Hindi narration offline
+        run: |
+          espeak-ng -v hi -s 145 -f examples/first-hindi-video/voiceover-hi.txt -w /tmp/wondervexa-hi.wav
+          test -s /tmp/wondervexa-hi.wav
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /tmp/wondervexa-hi.wav
+      - name: Render vertical proof with burned English subtitles and brand text
+        run: |
+          mkdir -p output/hindi-proof
+          ffmpeg -y \
+            -f lavfi -i "color=c=0x07142e:s=1080x1920:r=30:d=60" \
+            -i /tmp/wondervexa-hi.wav \
+            -vf "drawbox=x=180:y=350:w=720:h=720:color=0x168cff@0.12:t=18,drawbox=x=230:y=400:w=620:h=620:color=0x36c5ff@0.20:t=8,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='CAN TIME BE STOPPED?':fontcolor=white:fontsize=54:x=(w-text_w)/2:y=650:box=1:boxcolor=black@0.28:boxborderw=20,subtitles=examples/first-hindi-video/captions-en.srt:force_style='FontName=Noto Sans,FontSize=22,Alignment=2,MarginV=240,Outline=2,Shadow=1',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='WONDERVEXA':fontcolor=white@0.90:fontsize=34:x=(w-text_w)/2:y=h-120" \
+            -map 0:v:0 -map 1:a:0 -shortest \
+            -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p \
+            -c:a aac -b:a 128k -movflags +faststart \
+            output/hindi-proof/wondervexa-hindi-proof.mp4
+          ffmpeg -y -ss 2 -i output/hindi-proof/wondervexa-hindi-proof.mp4 -frames:v 1 output/hindi-proof/thumbnail.png
+      - name: Verify MP4 streams and vertical dimensions
+        run: |
+          ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height -of csv=p=0 output/hindi-proof/wondervexa-hindi-proof.mp4 | grep -E '^h264,1080,1920$'
+          ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 output/hindi-proof/wondervexa-hindi-proof.mp4 | grep -E '^aac$'
+          test -s output/hindi-proof/thumbnail.png
+          test -s output/hindi-proof/wondervexa-hindi-proof.mp4
+      - name: Upload Hindi proof artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wondervexa-hindi-render-proof-${{ github.run_id }}
+          path: output/hindi-proof/
+          if-no-files-found: error
+          retention-days: 14

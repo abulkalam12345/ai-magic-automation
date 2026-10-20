@@ -27,7 +27,7 @@ jobs:
         run: python src/subtitle_check.py examples/first-hindi-video/captions-en.srt
       - name: Run safety tests
         run: python -m unittest discover -s tests -v
-      - name: Validate first Hindi video English subtitles\n        run: python src/subtitle_check.py examples/first-hindi-video/captions-en.srt\n      - name: Check example configuration (expected not-ready until provider is verified)
+      - name: Check example configuration (expected not-ready until provider is verified)
         run: |
           set +e
           python src/pipeline.py

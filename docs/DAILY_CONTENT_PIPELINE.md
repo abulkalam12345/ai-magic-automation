@@ -9,9 +9,13 @@ Once per day (06:15 Asia/Kathmandu, best-effort), GitHub Actions:
 5. Exports a 1080x1920 PNG thumbnail and technically validates the H.264/AAC MP4 and thumbnail.
 6. Stores draft packages and rendered files in a downloadable GitHub Actions artifact for 14 days.
 
-The renderer creates original vector-style animation (currently a golden-tree growth scene), not AI-generated cinematic footage, live footage, or generated photographic scenes. The voice is synthetic eSpeak NG, not a human voice. No music is added. The channel logo asset is not yet included; the video currently uses a text-only WONDERVEXA mark. Human review is still required for visual quality, story accuracy, accessibility, rights, and platform suitability.
+The renderer creates original procedural vector-style animation, not AI-generated cinematic footage, live footage, or generated photographic scenes. The voice is synthetic eSpeak NG, not a human voice. No music is added. The renderer now draws a procedural electric-blue portal ring, a white W monogram, and WONDERVEXA text as a temporary watermark treatment. This is not the original uploaded logo artwork. Human review is still required for visual quality, story accuracy, accessibility, rights, and platform suitability.
 
 The content factory uses a small curated idea bank. It does not verify live trends, and metadata explicitly labels topics as unverified evergreen seeds. It does not call a language model or video-generation provider.
+
+## First Hindi narration + English subtitle proof package
+
+`examples/first-hindi-video/` contains a Hindi thought-experiment script, an editable English SRT starting point, and scene-by-scene continuity prompts. These are editorial assets only: no Hindi voice track or cinematic footage has been generated. Subtitle timings are provisional and must be retimed to the actual voice and final edit. The package does not change the scheduled daily factory, which still generates its existing English evergreen drafts.
 
 ## Safety and cost
 - No external AI, image, voice, or video-generation API is called.

@@ -189,12 +189,24 @@ def render_frame(index: int, title: str, premise: str) -> Image.Image:
     box = draw.textbbox((0, 0), tagline, font=small)
     draw.text(((WIDTH-(box[2]-box[0]))/2, y0+8), tagline,
               font=small, fill=(155, 220, 255, 255))
-    # Text-only brand mark; the channel's original logo asset is not in this repo.
+    # Compact WonderVexa identity mark: an electric-blue portal and W monogram.
+    # This is drawn locally so the scheduled workflow needs no external assets.
+    mark_cx, mark_cy, mark_r = WIDTH - 76, HEIGHT - 92, 34
+    for ring_width, ring_alpha in ((9, 55), (5, 190), (2, 245)):
+        draw.ellipse((mark_cx-mark_r, mark_cy-mark_r,
+                      mark_cx+mark_r, mark_cy+mark_r),
+                     outline=(55, 185, 255, ring_alpha), width=ring_width)
+    monogram_font = _font(35, True)
+    monogram = "W"
+    mb = draw.textbbox((0, 0), monogram, font=monogram_font)
+    draw.text((mark_cx-(mb[2]-mb[0])/2, mark_cy-(mb[3]-mb[1])/2-5),
+              monogram, font=monogram_font, fill=(235, 250, 255, 255),
+              stroke_width=1, stroke_fill=(20, 110, 255, 255))
     brand = "WONDERVEXA"
-    brand_font = _font(21, True)
+    brand_font = _font(15, True)
     box = draw.textbbox((0, 0), brand, font=brand_font)
-    draw.text((WIDTH-(box[2]-box[0])-28, HEIGHT-58), brand,
-              font=brand_font, fill=(235, 245, 255, 220))
+    draw.text((mark_cx-(box[2]-box[0])/2, mark_cy+43), brand,
+              font=brand_font, fill=(180, 225, 255, 245))
     opacity = fade_factor(t)
     if opacity < 1.0:
         image = Image.blend(Image.new("RGB", image.size, (0, 0, 0)), image, opacity)

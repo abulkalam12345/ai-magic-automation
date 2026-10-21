@@ -4,6 +4,8 @@ on:
   schedule:
     # 06:15 Nepal time (UTC+5:45), once per day.
     - cron: "30 0 * * *"
+    # 18:15 Nepal time (UTC+5:45), once per day.
+    - cron: "30 12 * * *"
   workflow_dispatch:
     inputs:
       slot:
@@ -12,6 +14,7 @@ on:
         type: choice
         options:
           - morning
+          - evening
 
 permissions:
   contents: read
@@ -51,13 +54,15 @@ jobs:
           SCHEDULE: ${{ github.event.schedule }}
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ "$INPUT_SLOT" != "morning" ]; then
-              echo "Only the morning draft slot is enabled." >&2
+            if [ "$INPUT_SLOT" != "morning" ] && [ "$INPUT_SLOT" != "evening" ]; then
+              echo "Unknown draft slot." >&2
               exit 1
             fi
-            echo "value=morning" >> "$GITHUB_OUTPUT"
+            echo "value=$INPUT_SLOT" >> "$GITHUB_OUTPUT"
           elif [ "$SCHEDULE" = "30 0 * * *" ]; then
             echo "value=morning" >> "$GITHUB_OUTPUT"
+          elif [ "$SCHEDULE" = "30 12 * * *" ]; then
+            echo "value=evening" >> "$GITHUB_OUTPUT"
           else
             echo "Unexpected schedule; refusing to create a draft." >&2
             exit 1

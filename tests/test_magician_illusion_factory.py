@@ -17,7 +17,7 @@ class MagicianIllusionFactoryTests(unittest.TestCase):
             self.assertEqual(len(data["scenes"]), 6)
             self.assertIn("रुको", production)
             self.assertIn("SHE VANISHED", production)
-            self.assertIn("No footage or audio generated", production)
+            self.assertIn("no footage or audio generated", production)
             self.assertFalse((out / "video.mp4").exists())
 
     def test_character_continuity_and_publication_gate_are_explicit(self):

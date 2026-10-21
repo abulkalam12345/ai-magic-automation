@@ -49,6 +49,21 @@ jobs:
           python src/content_factory.py --slot evening --date "$(TZ=Asia/Kathmandu date +%F)"
       - name: Build magician-led Episode 01 editorial package
         run: python src/magician_illusion_factory.py --output output/magician-episode-01
+      - name: Validate magician Episode 01 editorial package
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("output/magician-episode-01")
+          episode = json.loads((root / "episode.json").read_text(encoding="utf-8"))
+          production = (root / "production.md").read_text(encoding="utf-8")
+          assert episode["status"] == "editorial_draft_only"
+          assert len(episode["scenes"]) == 6
+          assert episode["publishing"]["enabled"] is False
+          assert "रुको" in production
+          assert "SHE VANISHED" in production
+          print("Magician editorial package: PASS (6 scenes; no media or publishing)")
+          PY
       - name: Validate generated draft package
         run: |
           shopt -s nullglob

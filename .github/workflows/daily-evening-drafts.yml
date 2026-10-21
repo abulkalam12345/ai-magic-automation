@@ -47,6 +47,8 @@ jobs:
       - name: Build evening script, SEO metadata and thumbnail draft
         run: |
           python src/content_factory.py --slot evening --date "$(TZ=Asia/Kathmandu date +%F)"
+      - name: Build magician-led Episode 01 editorial package
+        run: python src/magician_illusion_factory.py --output output/magician-episode-01
       - name: Validate generated draft package
         run: |
           shopt -s nullglob
@@ -86,5 +88,6 @@ jobs:
             output/daily-renders/
             output/research-stories/
             output/trend-research/
+            output/magician-episode-01/
           if-no-files-found: error
           retention-days: 14

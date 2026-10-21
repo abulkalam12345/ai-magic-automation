@@ -8,15 +8,15 @@ Do not connect an API key, spend tokens, start a paid plan, enable auto top-up, 
 
 ## What the provider currently claims
 
-Official Free.ai pages describe self-hosted CogVideoX video generation, MP4 output, no watermark, mobile-browser support, 9:16 output, and commercial use. The text-to-video page describes 2–6 second clips and says signed-in accounts receive 30,000 daily tokens. The CogVideoX model page says a 4-second clip uses roughly 10,000 tokens.
+Official Free.ai pages describe self-hosted CogVideoX video generation, MP4 output, no watermark, 9:16 output, and commercial use. The general video page currently describes free CogVideoX clips up to 3 seconds at 480p, with 6,000 daily tokens anonymously and 30,000 daily tokens for signed-in accounts. The CogVideoX-2B model page separately describes about 10,000 tokens per ~5-second clip, a minimum of 15,000 tokens, and paid top-ups after the daily pool is exhausted. These claims are inconsistent across the provider's own pages.
 
 Official pricing/token pages are not fully consistent about video allowances:
-- The pricing page describes a free account with 30,000 daily tokens and a daily cap of one video clip.
-- The video page describes free clips up to 3 seconds and 6,000 anonymous / 30,000 signed-in daily tokens.
-- Another localized video page describes one free clip every other day.
-- The token page gives differing per-clip figures in different sections (5,000 vs 15,000 tokens).
+- The general video page describes free clips up to 3 seconds, with 6,000 anonymous / 30,000 signed-in daily tokens; it estimates 2 seconds at ~5,000 tokens and 3 seconds at ~7,500 tokens.
+- The CogVideoX-2B model page describes ~2,500 tokens per second, a 15,000-token minimum, and ~10,000 tokens per ~5-second clip elsewhere on the same page.
+- A localized video page describes one free account clip every other day and a different 2-second/3-second token schedule.
+- The separate Movie Generator says a 3-scene movie costs ~15,500 tokens, so it is not guaranteed to fit a free daily pool.
 
-Therefore, the actual available free clip quota, clip duration, and token cost must be confirmed in the signed-in account UI immediately before any manual test. Never assume that the advertised daily pool means a clip is available today.
+Therefore, even though the public pages advertise a free daily token pool, the actual eligible model, available clip quota, duration, and token cost are not reliably established by the public documentation. Confirm the exact selected model and live token cost in the signed-in account UI immediately before any manual test. Never assume that a daily token balance guarantees a free clip.
 
 ## Quality and workflow risks
 

@@ -1,0 +1,41 @@
+name: WonderVexa evening draft watchdog
+
+on:
+  schedule:
+    # 23:30 Nepal time (UTC+5:45).
+    - cron: "45 17 * * *"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  check-evening-draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check whether today's evening draft run succeeded
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          today_utc="$(date -u +%F)"
+          window_start="${today_utc}T12:30:00Z"
+          window_end="${today_utc}T17:45:00Z"
+          echo "Checking evening draft run between $window_start and $window_end"
+          runs="$(gh api "repos/$REPOSITORY/actions/workflows/daily-evening-drafts.yml/runs?event=schedule&per_page=100")"
+          match="$(jq -r --arg start "$window_start" --arg end "$window_end" '
+            [.workflow_runs[]
+              | select(.created_at >= $start and .created_at <= $end)
+              | select(.conclusion == "success")]
+            | sort_by(.created_at)
+            | last
+            | if . == null then empty else [.id, .created_at, .html_url] | @tsv end
+          ' <<< "$runs")"
+          if [[ -z "$match" ]]; then
+            echo "::error::No successful evening scheduled draft run was found by the watchdog check."
+            exit 1
+          fi
+          echo "Successful evening run found: $match"

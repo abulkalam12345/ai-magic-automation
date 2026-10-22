@@ -4,8 +4,6 @@ on:
   schedule:
     # 06:15 Nepal time (UTC+5:45), once per day.
     - cron: "30 0 * * *"
-    # 18:15 Nepal time (UTC+5:45), once per day.
-    - cron: "30 12 * * *"
   workflow_dispatch:
     inputs:
       slot:

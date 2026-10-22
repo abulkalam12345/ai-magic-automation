@@ -2,6 +2,8 @@
 
 Last reviewed: 2026-10-22
 
+Current target: one finished video per 24 hours (not two). Zero budget remains mandatory.
+
 This tracker separates working draft automation from the unfinished real-video and publishing pipeline.
 
 ## Verified working
@@ -45,9 +47,13 @@ Passing a website marketing claim alone does not satisfy this checklist.
 - [ ] Credentials remain in GitHub encrypted secrets or the platform's secure OAuth flow; never commit tokens.
 - [ ] Publishing remains disabled until all checks pass.
 
+## Provider research
+
+See [Zero-budget provider research (2026-10-22)](ZERO_BUDGET_PROVIDER_RESEARCH_2026-10-22.md). Current decision: Hedra App and nokeep are manual-test leads only; Adobe Firefly is a rights-documentation lead with limited free daily access; public Wan/LTX demo frontends remain unapproved. No provider is approved for scheduled generation.
+
 ## Next action
 
-Generate one manual five-second test clip using a candidate zero-cost provider. Review the actual exported file and the selected engine's terms before integrating anything into scheduled automation.
+Generate one manual five-second test clip using the selected exact engine, then review the exported file and that engine's terms before integrating anything into scheduled automation.
 
 ## Non-goals
 

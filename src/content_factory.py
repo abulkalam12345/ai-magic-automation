@@ -17,57 +17,46 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 IDEAS = [
-    ("Moonlit Seed", "A tiny seed grows into a glowing moonflower when kindness is shown", "magical flower transformation", "A forgotten seed glows under moonlight and blooms into a tiny galaxy flower."),
-    ("Crystal Rain", "A raindrop becomes a crystal garden above a dry village", "fantasy crystal garden", "One sparkling raindrop turns an empty garden into a crystal wonderland."),
-    ("Clockwork Butterfly", "A broken mechanical butterfly receives a magical repair", "magical butterfly restoration", "A little brass butterfly gets one last spark and comes alive."),
-    ("Lantern of Hope", "A dark lantern lights up when someone shares a small act of kindness", "hope magic short story", "A single act of kindness awakens a lantern that lights an entire forest."),
-    ("Starfish Wish", "A stranded starfish is returned to the sea by a wave of stardust", "ocean magic transformation", "Stardust brings a stranded starfish safely back to a glowing ocean."),
-    ("Frozen Rose", "A frozen rose blooms when a warm golden light touches it", "ice to flower magic", "A frozen rose transforms into a radiant flower in a swirl of blue and gold."),
-    ("Paper Dragon", "A child's paper dragon becomes a tiny luminous guardian", "paper dragon comes alive", "An ordinary paper dragon receives a magical spark and spreads its wings."),
-    ("Aurora Waterfall", "A hidden waterfall turns into flowing northern lights", "aurora waterfall fantasy", "A secret waterfall transforms into a river of colorful aurora light."),
-    ("Lost Firefly", "A dim firefly regains its light and guides others home", "firefly magical rescue", "One tiny firefly finds its glow and lights the way home for the whole forest."),
-    ("Wish Glass", "A cracked glass marble reveals a miniature enchanted world", "miniature fantasy world", "A cracked marble opens a tiny portal to a world of wonder."),
-
-    ("Glasswing Moth", "A pale moth gains luminous glass-like wings and escapes a rainy window", "magical moth transformation", "A tiny moth discovers wings made of moonlit glass."),
-    ("The Silent Bell", "A silent village bell rings again when a lost note returns", "enchanted bell fantasy", "One forgotten note awakens the bell that protects the village."),
-    ("Pocket Galaxy", "A dark pocket watch opens to reveal a swirling miniature galaxy", "miniature galaxy magic", "A stopped watch hides an entire galaxy waiting to shine."),
-    ("Coral Crown", "A dull coral crown restores color to a bleached underwater reef", "underwater coral restoration", "A forgotten crown sends color flowing through the reef."),
-    ("Cloud Whale", "A small cloud becomes a glowing whale floating above a sleeping town", "cloud whale fantasy", "A lonely cloud transforms into a gentle sky whale."),
-    ("Golden Acorn", "A tiny acorn grows into a protective tree of golden leaves", "magical acorn growth", "One golden acorn grows into a shelter for the forest."),
-    ("Starlight Key", "An old key unlocks a doorway made of constellations", "starlight portal fantasy", "A rusty key turns and unlocks a sky full of stars."),
-    ("Snowdrop Promise", "A frozen snowdrop flower blooms beneath a warm blue spark", "snowdrop flower magic", "A single blue spark wakes a flower beneath the snow."),
-    ("Origami Crane", "A paper crane unfolds into a living bird of soft light", "origami crane comes alive", "A folded paper crane takes flight in a shower of light."),
-    ("Pebble Planet", "An ordinary pebble reveals tiny oceans and mountains when illuminated", "tiny planet reveal", "A little pebble holds a whole world inside."),
-    ("Rainbow Shell", "A faded seashell releases a ribbon of color across the shore", "rainbow shell transformation", "A forgotten shell paints the beach with a living rainbow."),
-    ("Midnight Orchard", "Bare branches grow glowing fruit after a firefly visits", "magical glowing orchard", "One firefly brings a sleeping orchard back to life."),
-    ("The Kindness Thread", "A loose blue thread repairs a torn star-shaped kite", "magical thread repair", "A tiny thread stitches a broken kite back to the sky."),
-    ("Frost Phoenix", "A small ice sculpture becomes a gentle bird of shimmering frost", "ice phoenix fantasy", "A frozen bird spreads its wings without melting away."),
-    ("Singing Pebble", "A dull river stone glows and sends musical ripples through water", "enchanted river stone", "A silent stone finds its song beneath the river."),
-    ("Dandelion Comet", "A dandelion seed becomes a tiny comet crossing a twilight garden", "dandelion seed magic", "One drifting seed becomes a comet of golden light."),
-    ("Mossy Doorway", "A moss-covered stone opens into a bright hidden garden", "hidden garden portal", "A small door in an old stone reveals a secret garden."),
-    ("Blue Ember", "A fading ember becomes a floating blue lantern for a traveler", "blue ember transformation", "A dying ember finds a new purpose as a guiding light."),
-    ("Pearl of Tides", "A dull pearl restores a moonlit path through the ocean", "ocean pearl magic", "A little pearl lights a path beneath the waves."),
-    ("Feather Compass", "A fallen feather turns into a compass pointing toward home", "magical feather compass", "A lost feather becomes a guide home."),
-    ("Enchanted Hourglass", "Golden sand reverses a wilted leaf into a fresh green sprout", "hourglass time magic", "A few golden grains give a tiny leaf a second chance."),
-    ("Lighthouse Sprite", "A tiny sprite relights a lighthouse with a swirl of blue energy", "magical lighthouse story", "A little sprite restores the light that guides ships home."),
-    ("Jade Tadpole", "A tiny tadpole grows a shimmering tail and becomes a pond guardian", "fantasy pond transformation", "A small pond creature discovers its magical glow."),
-    ("Wishing Acorn Lantern", "An acorn shell becomes a lantern for woodland creatures", "woodland acorn lantern", "A hollow acorn shines bright enough to guide the forest."),
-    ("Moonstone Bridge", "Floating moonstones form a glowing bridge over a quiet stream", "moonstone bridge fantasy", "One by one, moonstones create a path across the water."),
-    ("Dewdrop Castle", "A single dewdrop reveals a tiny castle at sunrise", "dewdrop miniature castle", "A drop of morning dew hides a castle made of light."),
-    ("The Last Snowflake", "A melting snowflake becomes a crystal flower before it disappears", "snowflake crystal flower", "The last snowflake leaves behind a flower of crystal."),
-    ("Comet Seedling", "A weak seedling grows luminous leaves beneath a passing comet", "comet garden magic", "A passing comet gives one little seedling a brilliant glow."),
-    ("Whispering Shell", "A seashell releases glowing musical notes that guide a turtle to the sea", "magical seashell rescue", "A shell whispers a song that leads a little turtle home."),
-    ("Aurora Feather", "A grey feather transforms into a ribbon of northern lights", "aurora feather transformation", "A forgotten feather unfolds into the colors of the sky."),
-    ("Crystal Acorn Door", "A crystal acorn opens to reveal a miniature forest home", "crystal acorn miniature world", "A tiny crystal acorn holds a home for the smallest forest friend."),
-    ("Starlit Teacup", "A chipped teacup fills with a swirling night sky and tiny stars", "starlit teacup fantasy", "A chipped cup becomes a little universe under moonlight."),
-    ("Emerald Raindrop", "A raindrop turns a grey leaf into a bright emerald canopy", "emerald leaf transformation", "One emerald raindrop awakens the colors of a tree."),
-    ("Butterfly Lantern", "A paper lantern unfolds into a glowing butterfly that lights a path", "butterfly lantern magic", "A quiet lantern opens its wings and lights the way."),
-    ("Tiny Tidepool", "A dry tidepool fills with miniature glowing sea life", "magical tidepool transformation", "A little pool becomes a whole ocean of wonder."),
-    ("Sunrise Music Box", "An old music box releases a miniature sunrise over a dark room", "magical music box sunrise", "One gentle tune brings sunrise into a dark room."),
-    ("Silver Willow", "A bare willow grows silver leaves that shimmer in the night breeze", "silver willow tree magic", "A quiet spark gives a bare willow a crown of silver."),
-    ("Star Map Parchment", "A blank parchment reveals a glowing map to a hidden constellation", "magical star map", "A blank page becomes a map written in stars."),
-    ("Candlefly Rescue", "A tiny insect trapped in darkness becomes a beacon for its friends", "glowing insect rescue", "One small light helps every lost friend find the way."),
-    ("Ruby Raindrop", "A red raindrop transforms a grey stone into a blooming miniature garden", "ruby raindrop garden", "A single ruby drop turns stone into a secret garden."),
+    ("Vanishing Lemon", "A magician closes her hand around a lemon; it vanishes, but appears inside the mirror", "lemon vanish magic trick", "She opened her hand. The lemon was gone. The mirror still held it."),
+    ("The Delayed Reflection", "A magician moves, but her mirror reflection reacts one second too late", "mirror reflection illusion", "Watch the mirror. It moves after she stops."),
+    ("The Escaping Reflection", "The magician's reflection steps out of the mirror while she remains still", "reflection escape illusion", "Her reflection just walked out of the mirror."),
+    ("The Floating Ring", "A silver ring rises from the magician's palm and circles her wrist", "levitating ring magic trick", "She never touched it. So why is it floating?"),
+    ("The Borrowed Shadow", "The magician's shadow turns and waves while she faces forward", "living shadow illusion", "Her shadow is waving. She isn't."),
+    ("The Empty Hat", "A magician shows an empty hat; a white dove's shadow appears inside it", "magic hat illusion", "The hat was empty. Then something moved inside."),
+    ("The Impossible Key", "A key melts through a locked glass box without breaking the glass", "impossible key magic illusion", "The glass is still locked. The key is now inside."),
+    ("The Mirror Double", "A second version of the magician appears behind her in the mirror", "mirror double illusion", "There is someone behind her. Look again."),
+    ("The Floating Playing Card", "A single playing card hovers and turns between the magician's fingers", "levitating playing card trick", "One card. No strings. Don't blink."),
+    ("The Disappearing Rose", "A red rose vanishes from the magician's fingers and blooms in a sealed glass", "rose vanish magic trick", "The rose vanished from her hand. It bloomed inside the glass."),
+    ("The Time-Stopped Watch", "A watch stops ticking while everything around it keeps moving", "time stop magic illusion", "Only the watch stopped. Everything else kept moving."),
+    ("The Portal in the Mirror", "A violet portal opens inside an ordinary standing mirror", "mirror portal fantasy illusion", "That mirror is no longer reflecting the room."),
+    ("The Vanishing Woman", "The magician disappears, leaving only her reflection staring at camera", "woman disappearance magic illusion", "She vanished. Her reflection didn't."),
+    ("The Endless Coin", "A coin passes through the magician's closed fist and returns from behind her ear", "coin through hand magic trick", "She closed her fist. The coin came out somewhere impossible."),
+    ("The Glass Without Walls", "A silk scarf passes through a sealed transparent glass cylinder", "penetration magic illusion", "The glass never opened. The scarf passed straight through."),
+    ("The Shadow Doppelganger", "The magician's shadow separates from her feet and stands upright", "shadow double magic illusion", "Her shadow has stopped following her."),
+    ("The Floating Candle", "A candle rises and circles the magician in a dark room", "levitating candle magic illusion", "No wire. No hands. Just a floating flame."),
+    ("The Split Reflection", "The mirror shows two different versions of the magician at once", "split mirror illusion", "One mirror. Two different reflections."),
+    ("The Locked Box Escape", "A silk ribbon tied around a small box appears outside while the box remains sealed", "impossible box magic trick", "The ribbon escaped. The box never opened."),
+    ("The Black Rose", "A white rose turns black between two finger snaps", "instant rose color change trick", "One snap changed every petal."),
+    ("The Vanishing Deck", "A full deck of cards disappears between the magician's hands", "disappearing playing cards trick", "A full deck. One second. Nothing left."),
+    ("The Mirror Hand", "A hand reaches out from the mirror and touches the glass from the outside", "hand through mirror illusion", "Something inside the mirror just touched the glass."),
+    ("The Floating Silk", "A violet silk cloth rises and folds itself into a rose", "self folding silk magic illusion", "The silk is folding itself. Watch what it becomes."),
+    ("The Impossible Water", "Water pours upward from a glass into a hovering bottle", "reverse gravity water magic", "The water is flowing in the wrong direction."),
+    ("The Vanishing Ring Box", "A ring box disappears, leaving the ring floating in place", "ring box vanish magic trick", "The box disappeared. The ring stayed in mid-air."),
+    ("The Living Portrait", "A portrait of the magician blinks while she stands motionless", "moving portrait magic illusion", "The portrait just blinked. She didn't."),
+    ("The Paper Butterfly", "A paper butterfly unfolds, flaps its wings, then lands on her finger", "paper butterfly comes alive magic", "It was paper a second ago."),
+    ("The Impossible Knot", "A rope tied in a tight knot becomes perfectly straight in her closed fist", "instant rope restoration magic", "One squeeze. The knot is gone."),
+    ("The Candle Through Glass", "A candle flame passes through a glass pane without cracking it", "flame through glass illusion", "The flame crossed the glass. The glass is untouched."),
+    ("The Second Moon", "A tiny glowing moon appears between the magician's palms", "miniature moon magic illusion", "She is holding something that shouldn't fit in her hands."),
+    ("The Vanishing Chair", "An empty chair disappears, but its shadow remains on the floor", "vanishing object shadow illusion", "The chair is gone. Its shadow is still there."),
+    ("The Reverse Footsteps", "Footprints appear in dust ahead of the magician before she takes a step", "reverse footsteps magic illusion", "The footprints are appearing before she walks."),
+    ("The Floating Hourglass", "An hourglass turns upside down in mid-air and its sand rises", "reverse sand hourglass illusion", "The sand is falling upward."),
+    ("The Duplicate Coin", "One coin splits into three identical coins across her fingertips", "coin multiplication magic trick", "One coin became three. Count them."),
+    ("The Vanishing Door", "A doorway appears in a blank wall and closes behind the magician", "secret portal door illusion", "There was no door there a moment ago."),
+    ("The Unblinking Twin", "A mirror double keeps eye contact while the magician turns away", "mirror twin magic illusion", "She looked away. Her reflection kept staring."),
+    ("The Floating Water Drop", "A single water droplet hovers and circles a glass sphere", "levitating water drop illusion", "A drop of water is orbiting the glass."),
+    ("The Impossible Match", "A burning match extinguishes, then relights inside a sealed jar", "impossible match magic trick", "The flame went out. Now it is burning inside the jar."),
+    ("The Shadow Portal", "A dark doorway opens inside the magician's shadow", "shadow portal magic illusion", "Her shadow just became a doorway."),
+    ("The Final Switch", "The magician and her reflection exchange places in a single flash", "magician mirror switch illusion", "Which one came out of the mirror?")
 ]
 
 
@@ -153,7 +142,7 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
         f"beautiful {keyword} animation", "AI magic transformation short",
         "original fantasy short story", "WonderVexa magical shorts",
     ]
-    hashtags = ["#WonderVexa", "#MagicShorts", "#FantasyShorts", "#AIMagic", "#Shorts"]
+    hashtags = ["#WonderVexa", "#MagicShorts", "#IllusionShorts", "#AIMagic", "#Shorts"]
     script = f"""# {title}
 
 **Channel:** WonderVexa  
@@ -190,7 +179,7 @@ def build_package(day: date, slot: str, out_dir: Path, history_file: Path) -> Pa
 **Status:** Prompt pack only — no media has been generated.
 
 ## Continuity lock
-Use the exact same central subject, silhouette, colors, proportions, and environment in every scene. Keep the camera vertical and the subject centered. Preserve realistic, readable movement and a consistent cinematic fantasy 3D look. Generate clean footage without text, logos, captions, or watermark; add branding only during editing.
+Character continuity lock: the same photorealistic adult South Asian female magician in every scene, with long jet-black hair, warm brown skin, almond-shaped brown eyes, high cheekbones, and a tiny beauty mark. Keep her face, age, hair, body proportions, and identity unchanged. She wears the same fitted black/deep-plum magician costume with violet-blue embroidery and restrained silver jewelry. Live-action cinematic VFX realism, believable skin texture, practical lighting, physically coherent hands and props; avoid cartoon, illustration, or generic fantasy animation. Keep the camera vertical and subject centered. Generate clean footage without text, logos, captions, or watermark; add WonderVexa branding only during editing.
 
 ## Scene 1 — Establish the problem (0–2 seconds)
 Create a vertical 9:16 cinematic macro establishing shot for this story: {premise}. Show the subject clearly in its initial state, with the problem immediately understandable. Use a simple uncluttered background, gentle camera movement, soft depth of field, and restrained moonlit blue lighting. Keep the subject centered and fully inside frame.

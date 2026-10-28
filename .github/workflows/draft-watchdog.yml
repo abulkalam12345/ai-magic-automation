@@ -2,7 +2,7 @@ name: WonderVexa draft schedule watchdog
 
 on:
   schedule:
-    # Check morning run at 11:30 Nepal time (05:45 UTC).
+    # Check after the morning slot; GitHub may delay scheduled workflow starts.
     - cron: "45 5 * * *"
   workflow_dispatch:
     inputs:
@@ -49,7 +49,7 @@ jobs:
 
           today_utc="$(date -u +%F)"
           window_start="${today_utc}T00:30:00Z"
-          window_end="${today_utc}T05:45:00Z"
+          window_end="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           echo "Checking morning draft run between $window_start and $window_end"
           runs="$(gh api "repos/$REPOSITORY/actions/workflows/daily-drafts.yml/runs?event=schedule&per_page=100")"
@@ -65,7 +65,7 @@ jobs:
 
           if [[ -z "$match" ]]; then
             echo "::error::No successful morning scheduled draft run was found by the watchdog check."
-            echo "This check can detect a missed or failed run only if this watchdog itself is scheduled."
+            echo "The morning draft may have been missed or failed; inspect the daily-drafts workflow."
             exit 1
           fi
 

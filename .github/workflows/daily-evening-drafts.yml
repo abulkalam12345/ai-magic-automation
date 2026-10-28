@@ -1,9 +1,7 @@
-name: WonderVexa evening draft and motion render
+name: WonderVexa optional evening draft and motion render
 
 on:
-  schedule:
-    # 18:15 Nepal time (UTC+5:45).
-    - cron: "30 12 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
